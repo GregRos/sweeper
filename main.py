@@ -35,7 +35,7 @@ def print_info(torrent: Torrent, type: str):
 if __name__ == '__main__':
     cli = get_cli()
     args = cli.parse_args()
-    torrent = Torrent(args.torrent_root)
+    torrent = Torrent(" ".join(args.torrent_root))
     match args.command:
         case "info":
             print_info(torrent, args.type)
