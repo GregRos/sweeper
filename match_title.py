@@ -85,7 +85,8 @@ title_matcher = make_title_matcher(
         "SteamWorks",
         "RG",
     ]).add_words("GAME_KEYWORDS", 60, [
-        "DLC"
+        "DLC",
+        "Simulator"
     ]),
 
     for_media(

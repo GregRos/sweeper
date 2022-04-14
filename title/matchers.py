@@ -20,7 +20,7 @@ class RegexpMatcher(Matcher):
     def __init__(self, type: str, pattern: str, chance: float, meta_name: str):
         self.type = type
         self._pattern = re.compile(pattern, re.I)
-        self._chance = chance
+        self._chance = chance * 0.5
         self.meta_name = meta_name
 
     def apply(self, other: Torrent) -> int | None:
@@ -62,7 +62,7 @@ class TitleMatcher:
 
         # Divide out the (1 - P) factor and multiply by the P factor:
         final_chance_by_group = [
-            Chance(t, chance_none * P / (1 - P)) for t, P in all_positive_events.items()
+            Chance(t, chance_none / (1 - P)) for t, P in all_positive_events.items()
         ]
 
         # Return list of chances in descending order
