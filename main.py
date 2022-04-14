@@ -1,13 +1,18 @@
+from fractions import Fraction
+
 import util
 from common import Torrent
 from cli import get_cli
 from match_files import file_matcher
 from match_title import title_matcher
 
+def pretty_float(x: float):
+    return round(x, 4)
+
 def print_title_info(torrent: Torrent):
     result = title_matcher.match(torrent)
     by_confidence = "\n".join([
-        f"{i}) {chance.type} | {chance.chance}" for i, chance in enumerate(result.chances)
+        f"{i + 1}) {chance.type} | {pretty_float(chance.chance)}" for i, chance in enumerate(result.chances)
     ])
     print("TITLE INFO")
     print(by_confidence)
@@ -15,7 +20,7 @@ def print_title_info(torrent: Torrent):
 def print_file_info(torrent: Torrent):
     result = file_matcher.match(torrent)
     by_confidence = "\n".join([
-        f"{i}) {content.type} | {content.ratio} ({util.sizeof_fmt(content.total)})" for i, content in enumerate(result)
+        f"{i + 1}) {content.type} | {pretty_float(content.ratio)} ({util.sizeof_fmt(content.total)})" for i, content in enumerate(result)
     ])
     print("FILE INFO")
     print(by_confidence)

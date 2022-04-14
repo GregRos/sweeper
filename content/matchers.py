@@ -6,7 +6,7 @@ from common.torrent import Torrent
 
 class MediaExtension:
     def __init__(self, type: str, ext: str):
-        self.ext = ext
+        self.ext = f".{ext}"
         self.type = type
 
     def test(self, file: Path):
@@ -20,14 +20,14 @@ class ContentRatio:
 
 class ContentClassifier:
     def __init__(self, extensions: List[MediaExtension]):
-        self.extensions = {ext: ext.type for ext in extensions}
+        self.extensions = {ext.ext: ext.type for ext in extensions}
 
     def _classify_file(self, file: Path):
-        return self.extensions.get(file.suffix, "?")
+        return self.extensions.get(file.suffix, "Unknown")
 
     def match(self, torrent: Torrent) -> List[ContentRatio]:
         total_size = 0
-        file_size_by_group = defaultdict(lambda x: 0)
+        file_size_by_group = defaultdict(lambda: 0)
         for item in torrent.root.glob("**/*"):
             if item.is_dir():
                 continue

@@ -24,7 +24,8 @@ class RegexpMatcher(Matcher):
         self.meta_name = meta_name
 
     def apply(self, other: Torrent) -> int | None:
-        return self._chance if self._pattern.match(other.name) else 0
+        result = self._chance if self._pattern.search(other.name) else 0
+        return result
 
 class Chance:
     def __init__(self, type: str, chance: float):
@@ -57,7 +58,7 @@ class TitleMatcher:
         }
 
         # chance no match type is right
-        chance_none = prod([1 - P for k, P in all_positive_events])
+        chance_none = prod([1 - P for k, P in all_positive_events.items()])
 
         # Divide out the (1 - P) factor and multiply by the P factor:
         final_chance_by_group = [
