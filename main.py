@@ -1,16 +1,44 @@
-# This is a sample Python script.
+import util
+from types import Torrent
+from cli import get_cli
+from match_files import file_matcher
+from match_title import title_matcher
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+def print_title_info(torrent: Torrent):
+    result = title_matcher.match(torrent)
+    by_confidence = "\n".join([
+        f"{i}) {chance.type} | {chance.chance}" for i, chance in enumerate(result.chances)
+    ])
+    print("TITLE INFO")
+    print(by_confidence)
 
+def print_file_info(torrent: Torrent):
+    result = file_matcher.match(torrent)
+    by_confidence = "\n".join([
+        f"{i}) {content.type} | {content.ratio} ({util.sizeof_fmt(content.total)})" for i, content in enumerate(result)
+    ])
+    print("FILE INFO")
+    print(by_confidence)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def print_info(torrent: Torrent, type: str):
+    match type:
+        case "title":
+            print_title_info(torrent)
+        case "files":
+            print_file_info(torrent)
+        case "all":
+            print_info(torrent, "title")
+            print_info(torrent, "content")
+        case _:
+            raise Exception(f"Unknown info {type}")
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    cli = get_cli()
+    args = cli.parse_args()
+    torrent = Torrent(args.torrent)
+    match args.command:
+        case "info":
+            print_info(torrent, args.type)
+        case "sort":
+            raise Exception("Not implemented yet!")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
