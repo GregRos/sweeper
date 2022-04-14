@@ -24,7 +24,7 @@ def print_info(torrent: Torrent, type: str):
     match type:
         case "title":
             print_title_info(torrent)
-        case "files":
+        case "content":
             print_file_info(torrent)
         case "all":
             print_info(torrent, "title")
