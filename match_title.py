@@ -171,7 +171,7 @@ title_matcher = make_title_matcher(
         "unabridged",
         "abridged"
     ]).add_words("AUDIO_QUALITY", 90, [
-        "(320|64|128|256|224|32)\s?kbps",
+        r"(320|64|128|256|224|32)\s?kbps",
         r"(24|16)\s?bit",
         r"44.1khz",
         "44khz",
