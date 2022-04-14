@@ -2,7 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-from types.torrent import Torrent
+from common.torrent import Torrent
 
 class MediaExtension:
     def __init__(self, type: str, ext: str):

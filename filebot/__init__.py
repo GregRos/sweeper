@@ -2,7 +2,7 @@ from abc import abstractmethod
 from subprocess import Popen
 from typing import Literal, TypeAlias, Protocol, List
 
-from types import Torrent
+from common import Torrent
 
 Action: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
 Conflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]

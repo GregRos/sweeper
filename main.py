@@ -1,5 +1,5 @@
 import util
-from types import Torrent
+from common import Torrent
 from cli import get_cli
 from match_files import file_matcher
 from match_title import title_matcher

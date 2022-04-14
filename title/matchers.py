@@ -7,7 +7,7 @@ from itertools import groupby
 from math import prod
 from typing import Protocol, List, Iterable
 
-from types.torrent import Torrent
+from common.torrent import Torrent
 
 
 class Matcher(Protocol):

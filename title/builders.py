@@ -5,11 +5,11 @@ from math import prod
 from typing import List, Iterable
 
 from title.matchers import Matcher, RegexpMatcher, TitleMatcher
-from types.torrent import Torrent
+from common.torrent import Torrent
 
 
 class Builder(ABC):
-    _matchers: List[Matcher]
+    _matchers: List[Matcher] = []
     _name: str
 
     def _extend(self, matcher: Iterable[Matcher]) -> None:
