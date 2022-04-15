@@ -1,2 +1,2 @@
 from .matchers import RegexpMatcher, Chance, TitleMatcher
-from .builders import Builder, for_media, for_media_refine
+from .builders import Builder, match_title, match_title_refined

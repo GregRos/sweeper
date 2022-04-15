@@ -1,8 +1,9 @@
-from title.builders import for_media_refine, for_media, make_title_matcher
+from content import make_file_matcher, match_exts
+from title.builders import match_title_refined, match_title, make_title_matcher
 
 title_matcher = make_title_matcher(
     # RELEASE TYPES
-    for_media(
+    match_title(
         "game",
         "video"
     ).add_words("GameMovieReleaseType", 90, [
@@ -15,7 +16,7 @@ title_matcher = make_title_matcher(
         r"multi\d*",
     ]),
 
-    for_media(
+    match_title(
         "game",
         "program"
     ).add_words("Modification", 60, [
@@ -37,7 +38,7 @@ title_matcher = make_title_matcher(
         "ISO"
     ]),
 
-    for_media_refine({
+    match_title_refined({
         "game": 1,
         "program": 2
     }).add_words("PcPlatform", 90, [
@@ -63,7 +64,7 @@ title_matcher = make_title_matcher(
         "OEM"
     ]),
 
-    for_media(
+    match_title(
         "game"
     ).add_words("GamePlatform", 90, [
         "PS[43]",
@@ -95,7 +96,7 @@ title_matcher = make_title_matcher(
         "Simulator"
     ]),
 
-    for_media(
+    match_title(
         "video"
     ).add_words("VideoQuality", 80, [
         "(1080|720|540|1440|2160|480)[pi]",
@@ -155,17 +156,18 @@ title_matcher = make_title_matcher(
         "Series"
     ]),
 
-    for_media(
+    match_title(
         "video",
         "audio"
     ).add_words("AudioEncoding", 80, [
         "AC3",
         "AAC",
+        "AAC2",
         "MP3",
         "FLAC"
     ]),
 
-    for_media(
+    match_title(
         "audio"
     ).add_words("AudioKeyword", 60, [
         r"\dCD",
@@ -187,11 +189,38 @@ title_matcher = make_title_matcher(
         "44000hz"
     ]),
 
-    for_media(
+    match_title(
         "ebook"
     ).add_words("EbookFormat", 93, [
         "EPIB",
         "MOBI",
         "PDF",
     ]),
+)
+
+file_matcher = make_file_matcher(
+    match_exts(
+        "video"
+    ).add_exts("mkv", "avi", "flv", "mp4", "mpg", "mov", "vob", "wmv", "mkv", "webm", "mpeg", "ogv", "m4v", "h264", "srt", "ssa"),
+
+    match_exts(
+        "audio"
+    ).add_exts("mid", "midi", "mp3", "wav", "wma", "aac", "flac", "mka", "m4a", "m4b", "ac3"),
+
+    match_exts(
+        "program"
+    ).add_exts("exe", "dll", "msi", "apk", "ahk", "jar", "cmd", "bin", "iso", "cue", "js", "dmg", "rom", "mdf", "img"),
+
+    match_exts(
+        "ebook"
+    ).add_exts("epub", "mobi", "pdf", "cbc"),
+
+    match_exts(
+        "text"
+    ).add_exts("txt", "nfo", "docx", "markdown", "md", "markd", "mmd", "odf", "doc", "xsl", "xslx", "xml", "json", "yaml", "yml", "rtf", "html", "chm"),
+
+    match_exts(
+        "image"
+    ).add_exts("jpg", "jpeg", "gif", "png", "tiff", "bmp", "svg", "ico")
+
 )

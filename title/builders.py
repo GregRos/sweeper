@@ -38,11 +38,11 @@ class ChanceRatioVectorBuilder(Builder):
         self._extend(all)
         return self
 
-def for_media(*types: str):
+def match_title(*types: str):
     return ChanceRatioVectorBuilder({t: 1 for t in types})
 
 
-def for_media_refine(type_fractions: dict[str, float]) -> ChanceRatioVectorBuilder:
+def match_title_refined(type_fractions: dict[str, float]) -> ChanceRatioVectorBuilder:
     return ChanceRatioVectorBuilder(type_fractions)
 
 

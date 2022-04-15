@@ -8,27 +8,28 @@ from pathlib import Path
 import util
 from common import Torrent
 from cli import get_cli
-from match_files import file_matcher
-from match_title import title_matcher
 
+from config import file_matcher, title_matcher
+
+tablizer = util.Tablizer()
 def pretty_float(x: float):
-    return round(x, 2)
+    return "{:.2f}".format(x)
 
 def print_title_info(torrent: Torrent):
     result = title_matcher.match(torrent)
-    by_confidence = "\n".join([
-        f"{i + 1}) {chance.type} | {pretty_float(chance.chance)} | {' + '.join(chance.meta_names)} " for i, chance in enumerate(result)
-    ])
+    info_table = [
+        [x.type, pretty_float(x.chance), ", ".join(x.meta_names)] for x in result
+    ]
     print("TITLE INFO")
-    print(by_confidence)
+    print(tablizer.table(info_table))
 
 def print_file_info(torrent: Torrent):
     result = file_matcher.match(torrent)
-    by_confidence = "\n".join([
-        f"{i + 1}) {content.type} | {pretty_float(content.ratio)} ({util.sizeof_fmt(content.total)})" for i, content in enumerate(result)
-    ])
+    info_table = [
+        [x.type, pretty_float(x.ratio), util.sizeof_fmt(x.total)] for x in result
+    ]
     print("FILE INFO")
-    print(by_confidence)
+    print(tablizer.table(info_table))
 
 def print_info(torrent: Torrent, type: str):
     if type == "title":
@@ -46,7 +47,7 @@ if __name__ == '__main__':
     args = cli.parse_args()
     torrent = Torrent(" ".join(args.torrent_root))
     if args.command == "info":
-        print(f"TORRENT {relpath(torrent.root, os.getcwd())}")
+        print(f"TORRENT {torrent.name}")
         print_info(torrent, args.type)
     elif args.command == "sort":
         raise Exception("Not implemented yet!")

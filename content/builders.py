@@ -13,7 +13,7 @@ class MediaTypeBuilder(Builder):
         self.type = type
         self._extensions = []
 
-    def add_extensions(self, *exts: str):
+    def add_exts(self, *exts: str):
         self._extensions.extend(exts)
         return self
 
@@ -22,10 +22,10 @@ class MediaTypeBuilder(Builder):
             MediaExtension(self.type, ext) for ext in self._extensions
         ]
 
-def for_media(type: str):
+def match_exts(type: str):
     return MediaTypeBuilder(type)
 
-def make_content_matcher(*builders: Builder):
+def make_file_matcher(*builders: Builder):
     return ContentClassifier([
         ext for builder in builders for ext in builder.get()
     ])
