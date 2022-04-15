@@ -17,7 +17,7 @@ def pretty_float(x: float):
 def print_title_info(torrent: Torrent):
     result = title_matcher.match(torrent)
     by_confidence = "\n".join([
-        f"{i + 1}) {chance.type} | {pretty_float(chance.chance)}" for i, chance in enumerate(result.chances)
+        f"{i + 1}) {chance.type} | {pretty_float(chance.chance)} | {' + '.join(chance.meta_names)} " for i, chance in enumerate(result)
     ])
     print("TITLE INFO")
     print(by_confidence)

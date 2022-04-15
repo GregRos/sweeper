@@ -20,7 +20,7 @@ class RegexpMatcher(Matcher):
     def __init__(self, type: str, pattern: str, chance: float, meta_name: str):
         self.type = type
         self._pattern = re.compile(pattern, re.I)
-        self._chance = chance * 0.5
+        self._chance = chance
         self.meta_name = meta_name
 
     def apply(self, other: Torrent) -> int | None:
@@ -28,9 +28,11 @@ class RegexpMatcher(Matcher):
         return result
 
 class Chance:
-    def __init__(self, type: str, chance: float):
+    def __init__(self, type: str, chance: float, meta_names: List[str]):
         self.type = type
         self.chance = chance
+        self.meta_names = meta_names
+
 
 class TitleMatchResult:
     def __init__(self, chances: List[Chance], matcher_names: List[str]):
@@ -42,13 +44,13 @@ class TitleMatcher:
     def __init__(self, *matchers: Matcher):
         self._matchers = matchers
 
-    def match(self, torrent: Torrent):
+    def match(self, torrent: Torrent) -> List[Chance]:
         all_events = defaultdict(list)
-        matched = set()
+        all_matched_by_type = defaultdict(list)
         for m in self._matchers:
             result = m.apply(torrent)
             if result:
-                matched.add(m.meta_name)
+                all_matched_by_type[m.type].append(m.meta_name)
                 all_events[m.type].append(result)
 
         all_positive_events = {
@@ -57,17 +59,12 @@ class TitleMatcher:
             ]) for key, all in all_events.items()
         }
 
-        # chance no match type is right
-        chance_none = prod([1 - P for k, P in all_positive_events.items()])
-
         # Divide out the (1 - P) factor and multiply by the P factor:
         final_chance_by_group = [
-            Chance(t, chance_none / (1 - P)) for t, P in all_positive_events.items()
+            Chance(t, P, all_matched_by_type[t]) for t, P in all_positive_events.items()
         ]
 
         # Return list of chances in descending order
         chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)
-        return TitleMatchResult(
-            chances_by_max,
-            list(matched)
-        )
+
+        return chances_by_max
