@@ -5,20 +5,20 @@ title_matcher = make_title_matcher(
     for_media(
         "game",
         "video"
-    ).add_words("GAME_MOVIE_RELEASE_TYPES", 60, [
+    ).add_words("GameMovieReleaseType", 60, [
         "Remastered",
         "Proper",
         "beta",
         "alpha",
         "Preload",
         "Repack",
-        r"multi\d",
+        r"multi\d*",
     ]),
 
     for_media(
         "game",
         "program"
-    ).add_words("CRACK_PATCH", 70, [
+    ).add_words("Modification", 70, [
         "Crack",
         "Activator",
         "Activated",
@@ -27,20 +27,20 @@ title_matcher = make_title_matcher(
         "Unlocked",
         "Patch",
         "Update"
-    ]).add_words("VERSION_PATTERN", 50, [
+    ]).add_words("VersionPattern", 50, [
         # It's low because the last pattern will match the previous one,
         # So actually it's very high sensitivity
         r"v\d+\.\d+",
         r"v\d+\.\d+\.\d+",
         r"v\d+\.\d+\.\d+\.\d+"
-    ]).add_words("ISO_FORMAT", 50, [
+    ]).add_words("IsoFile", 50, [
         "ISO"
     ]),
 
     for_media_refine({
         "game": 0.3,
         "program": 1
-    }).add_words("PC_PLATFORMS", 90, [
+    }).add_words("PcPlatform", 90, [
         "x86",
         "x64",
         r"32\s?bit",
@@ -54,7 +54,7 @@ title_matcher = make_title_matcher(
         "Mac",
         "win32",
         "win64"
-    ]).add_words("SOFTWARE_KEYWORDS", 50, [
+    ]).add_words("ProgramKeyword", 50, [
         "Pro",
         "Professional",
         "Retail",
@@ -65,16 +65,16 @@ title_matcher = make_title_matcher(
 
     for_media(
         "game"
-    ).add_words("CONSOLE_PLATFORMS", 90, [
+    ).add_words("GamePlatform", 90, [
         "PS[43]",
         "3?DS",
         r"X\s?BOX",
         r"PC\s?DVD",
+        r"Steam[\-. ]?rip"
         "BATTLENET",
         "GOG",
         "WII",
-        r"Steam[\-. ]?rip"
-    ]).add_words("GAME_RELEASE_GROUPS", 80, [
+    ]).add_words("GameGroup", 80, [
         "FLT",
         "SKIDROW",
         "CODEX",
@@ -83,15 +83,21 @@ title_matcher = make_title_matcher(
         "READNFO",
         "GameWorks",
         "SteamWorks",
+        "RELOADED",
+        "PROPHET",
         "RG",
-    ]).add_words("GAME_KEYWORDS", 60, [
+        "RAZOR1911",
+        "HOODLUM",
+        "PLAZA",
+        "EMPRESS"
+    ]).add_words("GameKeyword", 60, [
         "DLC",
         "Simulator"
     ]),
 
     for_media(
         "video"
-    ).add_words("VIDEO_QUALITY", 80, [
+    ).add_words("VideoQuality", 80, [
         "(1080|720|540|1440|2160|480)[pi]",
         "10bit",
         "HDR",
@@ -103,20 +109,20 @@ title_matcher = make_title_matcher(
         "DDP5",
         "HMAX",
         "BluRay"
-    ]).add_words("VIDEO_AUDIO_QUALITY", 30, [
+    ]).add_words("MovieAudioQuality", 30, [
         "5.1",
         "7.1",
         "DTS",
         "DDP",
         "ATMOS",
         r"\dch"
-    ]).add_words("VIDEO_ENCODINGS", 80, [
+    ]).add_words("VideoEncoding", 80, [
         "HEVC",
         "XVID",
         r"[XH][\-.]?26[3456]",
         "MP4",
         "MKV"
-    ]).add_words("VIDEO_SOURCES", 80, [
+    ]).add_words("VideoSource", 80, [
         "WEB-DL",
         "WEBDL",
         "WEB",
@@ -126,20 +132,23 @@ title_matcher = make_title_matcher(
         "DVDRip",
         "HDTV",
         "HDTVRip",
-        "AMZN"
-    ]).add_words("VIDEO_RELEASE_GROUPS", 80, [
+        "AMZN",
+    ]).add_words("VideoGroup", 80, [
         "ettv",
         "YTS",
         "YIFY",
         "eztv",
         "MeGusta",
         "TGx",
-        "EVO"
-    ]).add_words("SEASON_PATTERN", 60, [
+        "EVO",
+        "RARBG",
+        "SPARKS",
+        "GECKOS",
+    ]).add_words("SeasonPattern", 40, [
         r"s[01234]\d"
-    ]).add_words("EPISODE_PATTERN", 60, [
+    ]).add_words("EpisodePattern", 40, [
         r"s[01234]\de\d\d"
-    ]).add_words("VIDEO_KEYWORDS", 50, [
+    ]).add_words("VideoKeyword", 50, [
         "Episode",
         "Season",
         "Movie",
@@ -149,7 +158,7 @@ title_matcher = make_title_matcher(
     for_media(
         "video",
         "audio"
-    ).add_words("AUDIO_ENCODINGS", 80, [
+    ).add_words("AudioEncoding", 80, [
         "AC3",
         "AAC",
         "MP3",
@@ -158,7 +167,7 @@ title_matcher = make_title_matcher(
 
     for_media(
         "audio"
-    ).add_words("AUDIO_KEYWORDS", 60, [
+    ).add_words("AudioKeyword", 60, [
         r"\dCD",
         "single",
         "album",
@@ -170,7 +179,7 @@ title_matcher = make_title_matcher(
         "audiobook",
         "unabridged",
         "abridged"
-    ]).add_words("AUDIO_QUALITY", 90, [
+    ]).add_words("AudioQuality", 90, [
         r"(320|64|128|256|224|32)\s?kbps",
         r"(24|16)\s?bit",
         r"44.1khz",
@@ -180,7 +189,7 @@ title_matcher = make_title_matcher(
 
     for_media(
         "ebook"
-    ).add_words("EBOOK_FORMATS", 93, [
+    ).add_words("EbookFormat", 93, [
         "EPIB",
         "MOBI",
         "PDF",
