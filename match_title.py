@@ -5,7 +5,7 @@ title_matcher = make_title_matcher(
     for_media(
         "game",
         "video"
-    ).add_words("GameMovieReleaseType", 60, [
+    ).add_words("GameMovieReleaseType", 90, [
         "Remastered",
         "Proper",
         "beta",
@@ -18,7 +18,7 @@ title_matcher = make_title_matcher(
     for_media(
         "game",
         "program"
-    ).add_words("Modification", 70, [
+    ).add_words("Modification", 60, [
         "Crack",
         "Activator",
         "Activated",
@@ -38,8 +38,8 @@ title_matcher = make_title_matcher(
     ]),
 
     for_media_refine({
-        "game": 0.3,
-        "program": 1
+        "game": 1,
+        "program": 2
     }).add_words("PcPlatform", 90, [
         "x86",
         "x64",

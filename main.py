@@ -12,7 +12,7 @@ from match_files import file_matcher
 from match_title import title_matcher
 
 def pretty_float(x: float):
-    return round(x, 4)
+    return round(x, 2)
 
 def print_title_info(torrent: Torrent):
     result = title_matcher.match(torrent)

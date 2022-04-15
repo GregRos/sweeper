@@ -59,12 +59,21 @@ class TitleMatcher:
             ]) for key, all in all_events.items()
         }
 
+
+        # chance no match type is right
+        chance_none = prod([1 - P for k, P in all_positive_events.items()])
+        chance_some = 1 - chance_none
+        # The values we got for the Ps are messed up and a result of bad math.
+        # We can still use them
+
         # Divide out the (1 - P) factor and multiply by the P factor:
         final_chance_by_group = [
-            Chance(t, P, all_matched_by_type[t]) for t, P in all_positive_events.items()
+            Chance(t, chance_none / (1 - P), all_matched_by_type[t]) for t, P in all_positive_events.items()
         ]
 
         # Return list of chances in descending order
         chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)
-
+        scale_factor = chance_some / chances_by_max[0].chance
+        for c in final_chance_by_group:
+            c.chance *= scale_factor
         return chances_by_max

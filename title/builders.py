@@ -20,19 +20,20 @@ class Builder(ABC):
 
 
 class ChanceRatioVectorBuilder(Builder):
-    _fractions: dict[str, float]
+    _weights: dict[str, float]
 
-    def __init__(self, ratios: dict[str, float]):
+    def __init__(self, weights: dict[str, float]):
         self._matchers = []
-        self._fractions = ratios
+        self._weights = weights
         self._patterns = []
 
     def add_words(self, meta_name: str, percent: int, word_patterns: Iterable[str]) -> ChanceRatioVectorBuilder:
+        total_weights = sum([x for k, x in self._weights.items()])
         all = [
-            RegexpMatcher(type, rf"\b{word}\b", fraction * percent / 100, meta_name)
+            RegexpMatcher(type, rf"\b{word}\b", (weight / total_weights) * percent / 100, meta_name)
             for word in word_patterns
-            for type, fraction
-            in self._fractions.items()
+            for type, weight
+            in self._weights.items()
         ]
         self._extend(all)
         return self
