@@ -1,5 +1,6 @@
-from content import make_file_matcher, match_exts
-from title.builders import match_title_refined, match_title, make_title_matcher
+from extract.extractor import archive_exts
+from matchers.content import make_file_matcher, match_exts
+from matchers.title.builders import match_title_refined, match_title, make_title_matcher
 
 title_matcher = make_title_matcher(
     # RELEASE TYPES
@@ -201,7 +202,24 @@ title_matcher = make_title_matcher(
 file_matcher = make_file_matcher(
     match_exts(
         "video"
-    ).add_exts("mkv", "avi", "flv", "mp4", "mpg", "mov", "vob", "wmv", "mkv", "webm", "mpeg", "ogv", "m4v", "h264", "srt", "ssa"),
+    ).add_exts(
+        "ts",
+        "mkv",
+        "avi",
+        "flv",
+        "mp4",
+        "mpg",
+        "mov",
+        "vob",
+        "wmv",
+        "mkv",
+        "webm",
+        "mpeg",
+        "ogv",
+        "m4v",
+        "h264",
+        "srt",
+        "ssa"),
 
     match_exts(
         "audio"
@@ -209,7 +227,26 @@ file_matcher = make_file_matcher(
 
     match_exts(
         "program"
-    ).add_exts("exe", "dll", "msi", "apk", "ahk", "jar", "cmd", "bin", "iso", "cue", "js", "dmg", "rom", "mdf", "img"),
+    ).add_exts(
+        "exe",
+        "dll",
+        "msi",
+        "apk",
+        "ahk",
+        "jar",
+        "cmd",
+        "bin",
+        "iso",
+        "cue",
+        "js",
+        "dmg",
+        "rom",
+        "mdf",
+        "img",
+        "cab",
+        "mpq",
+        "part"
+    ),
 
     match_exts(
         "ebook"
@@ -217,10 +254,45 @@ file_matcher = make_file_matcher(
 
     match_exts(
         "text"
-    ).add_exts("txt", "nfo", "docx", "markdown", "md", "markd", "mmd", "odf", "doc", "xsl", "xslx", "xml", "json", "yaml", "yml", "rtf", "html", "chm"),
+    ).add_exts(
+        "txt",
+        "nfo",
+        "docx",
+        "markdown",
+        "md",
+        "markd",
+        "mmd",
+        "odf",
+        "doc",
+        "xsl",
+        "xslx",
+        "xml",
+        "json",
+        "yaml",
+        "yml",
+        "rtf",
+        "html",
+        "chm",
+        "strings",
+        "log",
+        "url"
+    ),
 
     match_exts(
         "image"
-    ).add_exts("jpg", "jpeg", "gif", "png", "tiff", "bmp", "svg", "ico")
+    ).add_exts(
+        "jpg",
+        "jpeg",
+        "gif",
+        "png",
+        "tiff",
+        "bmp",
+        "svg",
+        "ico",
+        "icns"
+    ),
 
+    match_exts(
+        "archive"
+    ).add_exts(*archive_exts)
 )

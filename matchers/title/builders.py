@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC
-from math import prod
 from typing import List, Iterable
 
-from title.matchers import Matcher, RegexpMatcher, TitleMatcher
-from common.torrent import Torrent
+from matchers.title.matchers import Matcher, RegexpMatcher, TitleMatcher
 
 
 class Builder(ABC):

@@ -27,15 +27,17 @@ class RegexpMatcher(Matcher):
         result = self._chance if self._pattern.search(other.name) else 0
         return result
 
-class Chance:
+class TitleMatch:
     def __init__(self, type: str, chance: float, meta_names: List[str]):
         self.type = type
         self.chance = chance
         self.meta_names = meta_names
 
+    def at_least(self, v: float):
+        return self.chance >= v
 
 class TitleMatchResult:
-    def __init__(self, chances: List[Chance], matcher_names: List[str]):
+    def __init__(self, chances: List[TitleMatch], matcher_names: List[str]):
         self.matcher_names = matcher_names
         self.chances = chances
 
@@ -44,7 +46,7 @@ class TitleMatcher:
     def __init__(self, *matchers: Matcher):
         self._matchers = matchers
 
-    def match(self, torrent: Torrent) -> List[Chance]:
+    def match(self, torrent: Torrent) -> List[TitleMatch]:
         all_events = defaultdict(list)
         all_matched_by_type = defaultdict(list)
         for m in self._matchers:
@@ -65,11 +67,14 @@ class TitleMatcher:
 
         # Divide out the (1 - P) factor:
         final_chance_by_group = [
-            Chance(t, chance_none / (1 - P), all_matched_by_type[t]) for t, P in all_positive_events.items()
+            TitleMatch(t, chance_none / (1 - P), all_matched_by_type[t]) for t, P in all_positive_events.items()
         ]
-
         # The values we got for the Ps are messed up and a result of bad math.
         # They're not actually probabilities.
+
+        # Add a chance for the unknown
+        unknown_chance = TitleMatch("Unknown", chance_none, [])
+        final_chance_by_group.append(unknown_chance)
 
         # Return list of chances in descending order
         chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)

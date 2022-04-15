@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, List
+from typing import List
 
-from content.matchers import MediaExtension, ContentClassifier
+from matchers.content.matchers import ContentMatcher
+from matchers.content import ExtensionClassifier
+
 
 class Builder(ABC):
     @abstractmethod
-    def get(self) -> List[MediaExtension]: pass
+    def get(self) -> List[ExtensionClassifier]: pass
 
 class MediaTypeBuilder(Builder):
     _extensions: List[str] = []
@@ -19,14 +21,14 @@ class MediaTypeBuilder(Builder):
 
     def get(self):
         return [
-            MediaExtension(self.type, ext) for ext in self._extensions
+            ExtensionClassifier(self.type, ext) for ext in self._extensions
         ]
 
 def match_exts(type: str):
     return MediaTypeBuilder(type)
 
 def make_file_matcher(*builders: Builder):
-    return ContentClassifier([
+    return ContentMatcher([
         ext for builder in builders for ext in builder.get()
     ])
 
