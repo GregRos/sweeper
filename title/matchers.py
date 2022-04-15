@@ -73,7 +73,7 @@ class TitleMatcher:
 
         # Return list of chances in descending order
         chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)
-        scale_factor = chance_some / chances_by_max[0].chance
+        scale_factor = chance_some / chances_by_max[0].chance if len(chances_by_max) > 0 else 0
         for c in final_chance_by_group:
             c.chance *= scale_factor
         return chances_by_max
