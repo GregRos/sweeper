@@ -30,23 +30,6 @@ def print_file_info(torrent: Torrent):
     print("FILE INFO")
     print(by_confidence)
 
-def get_sibling_path(a: Path, b: os.PathLike[str] | str):
-    b = Path(b)
-    cur = b
-    shared_root = None
-    while cur.root != cur.parent:
-        if a.is_relative_to(cur):
-            shared_root = cur
-            break
-        cur = cur.parent
-
-    if not shared_root:
-        return None
-
-    rel_a = shared_root.relative_to(b)
-    rel_b = a.relative_to(shared_root)
-    x = 1
-
 def print_info(torrent: Torrent, type: str):
     if type == "title":
         print_title_info(torrent)
