@@ -13,5 +13,5 @@ class SweeperError(Exception):
 
 
 def fail_with(torrent: Torrent, reason: str) -> NoReturn:
-    print(f"Failed to process {torrent.name}. Reason: {reason}.", file=sys.stderr)
+    print(f"In torrent '{torrent.name}' - {reason}.", file=sys.stderr)
     exit(1)

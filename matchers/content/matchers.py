@@ -3,8 +3,7 @@ from pathlib import Path
 from typing import List, Iterable
 
 from common.torrent import Torrent
-from .classifier import FileTypeClassifier
-from .simple import ExtensionClassifier
+from .matcher import FileMatcher
 
 
 class ContentMatch:
@@ -18,9 +17,9 @@ class ContentMatch:
         return self.type == what and self.ratio >= at
 
 class ContentMatcher:
-    extensions: dict[str, FileTypeClassifier]
-    def __init__(self, extensions: List[FileTypeClassifier]):
-        self.extensions = defaultdict(lambda : ExtensionClassifier("Unknown", "???"))
+    extensions: dict[str, FileMatcher]
+    def __init__(self, extensions: List[FileMatcher]):
+        self.extensions = defaultdict(lambda : ExtensionMatcher("Unknown", "???"))
         for x in extensions:
             self.extensions[x.ext] = x
 

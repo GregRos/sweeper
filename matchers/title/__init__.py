@@ -1,2 +1,2 @@
 from .matchers import RegexpMatcher, TitleMatch, TitleMatcher
-from .builders import Builder, match_title, match_title_refined
+from .builders import uniform_title_matcher, refined_title_matcher

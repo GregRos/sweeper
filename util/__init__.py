@@ -60,3 +60,16 @@ class Tablizer:
 
 def format_float(x: float):
     return "{:.2f}".format(x)
+
+class LibraryRoots:
+    def __init__(
+            self,
+            audio: str,
+            programs: str,
+            games: str,
+            movies: str,
+            anime: str,
+            shows: str,
+            ebooks: str
+    ):
+        self.audio = audio

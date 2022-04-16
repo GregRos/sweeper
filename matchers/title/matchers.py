@@ -9,14 +9,7 @@ from typing import Protocol, List, Iterable
 
 from common.torrent import Torrent
 
-
-class Matcher(Protocol):
-    type: str
-    meta_name: str
-    @abstractmethod
-    def apply(self, other: Torrent) -> int | None: pass
-
-class RegexpMatcher(Matcher):
+class RegexpMatcher:
     def __init__(self, type: str, pattern: str, chance: float, meta_name: str):
         self.type = type
         self._pattern = re.compile(pattern, re.I)
@@ -36,14 +29,8 @@ class TitleMatch:
     def at_least(self, v: float):
         return self.chance >= v
 
-class TitleMatchResult:
-    def __init__(self, chances: List[TitleMatch], matcher_names: List[str]):
-        self.matcher_names = matcher_names
-        self.chances = chances
-
-
 class TitleMatcher:
-    def __init__(self, *matchers: Matcher):
+    def __init__(self, matchers: List[RegexpMatcher]):
         self._matchers = matchers
 
     def match(self, torrent: Torrent) -> List[TitleMatch]:
@@ -69,7 +56,7 @@ class TitleMatcher:
         final_chance_by_group = [
             TitleMatch(t, chance_none / (1 - P), all_matched_by_type[t]) for t, P in all_positive_events.items()
         ]
-        # The values we got for the Ps are messed up and a result of bad math.
+        # The values we got for the Ps are messed up and a result of bad math that sorta works okay
         # They're not actually probabilities.
 
         # Add a chance for the unknown

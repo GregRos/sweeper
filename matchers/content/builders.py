@@ -1,34 +1,27 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from matchers.content.matcher import FileMatcher
 from matchers.content.matchers import ContentMatcher
-from matchers.content import ExtensionClassifier
 
 
-class Builder(ABC):
-    @abstractmethod
-    def get(self) -> List[ExtensionClassifier]: pass
-
-class MediaTypeBuilder(Builder):
-    _extensions: List[str] = []
-    def __init__(self, type: str):
-        self.type = type
-        self._extensions = []
+class ContentMatchBuilder:
+    _type: str
+    _matchers: List[FileMatcher]
+    def __init__(self, type):
+        self._type = type
+        self._matchers = []
 
     def add_exts(self, *exts: str):
-        self._extensions.extend(exts)
-        return self
+        self._matchers.extend([
+            FileMatcher(self._type, ext) for ext in exts
+        ])
+
+    def next_group(self, type: str):
+        self._type = type
 
     def get(self):
-        return [
-            ExtensionClassifier(self.type, ext) for ext in self._extensions
-        ]
+        return self._matchers
 
-def match_exts(type: str):
-    return MediaTypeBuilder(type)
-
-def make_file_matcher(*builders: Builder):
-    return ContentMatcher([
-        ext for builder in builders for ext in builder.get()
-    ])
-
+def content_matcher(type: str):
+    return ContentMatchBuilder(type)

@@ -1,10 +1,20 @@
 from extract.extractor import archive_exts
-from matchers.content import make_file_matcher, match_exts
-from matchers.title.builders import match_title_refined, match_title, make_title_matcher
+from matchers.content.builders import content_matcher
+from matchers.title.builders import title_matcher
+from common import Torrent
+from os import getenv
 
-title_matcher = make_title_matcher(
+audio_root = getenv("SWEEP_AUDIO")
+image_root = getenv("SWEEP_IMAGES")
+ebook_root = getenv("SWEEP_EBOOKS")
+movie_root = getenv("SWEEP_MOVIES")
+show_root = getenv("SWEEP_SHOWS")
+game_root = getenv("SWEEP_GAMES")
+program_root = getenv("SWEEP_PROGRAMS")
+
+titles = make_title_matcher(
     # RELEASE TYPES
-    match_title(
+    uniform_title_matcher(
         "game",
         "video"
     ).add_words("GameMovieReleaseType", 90, [
@@ -17,7 +27,7 @@ title_matcher = make_title_matcher(
         r"multi\d*",
     ]),
 
-    match_title(
+    uniform_title_matcher(
         "game",
         "program"
     ).add_words("Modification", 60, [
@@ -39,7 +49,7 @@ title_matcher = make_title_matcher(
         "ISO"
     ]),
 
-    match_title_refined({
+    refined_title_matcher({
         "game": 1,
         "program": 2
     }).add_words("PcPlatform", 90, [
@@ -65,7 +75,7 @@ title_matcher = make_title_matcher(
         "OEM"
     ]),
 
-    match_title(
+    uniform_title_matcher(
         "game"
     ).add_words("GamePlatform", 90, [
         "PS[43]",
@@ -97,7 +107,7 @@ title_matcher = make_title_matcher(
         "Simulator"
     ]),
 
-    match_title(
+    uniform_title_matcher(
         "video"
     ).add_words("VideoQuality", 80, [
         "(1080|720|540|1440|2160|480)[pi]",
@@ -157,7 +167,7 @@ title_matcher = make_title_matcher(
         "Series"
     ]),
 
-    match_title(
+    uniform_title_matcher(
         "video",
         "audio"
     ).add_words("AudioEncoding", 80, [
@@ -168,7 +178,7 @@ title_matcher = make_title_matcher(
         "FLAC"
     ]),
 
-    match_title(
+    uniform_title_matcher(
         "audio"
     ).add_words("AudioKeyword", 60, [
         r"\dCD",
@@ -190,7 +200,7 @@ title_matcher = make_title_matcher(
         "44000hz"
     ]),
 
-    match_title(
+    uniform_title_matcher(
         "ebook"
     ).add_words("EbookFormat", 93, [
         "EPIB",
@@ -199,7 +209,7 @@ title_matcher = make_title_matcher(
     ]),
 )
 
-file_matcher = make_file_matcher(
+file_matcher = make_content_matcher(
     match_exts(
         "video"
     ).add_exts(
@@ -249,10 +259,6 @@ file_matcher = make_file_matcher(
     ),
 
     match_exts(
-        "ebook"
-    ).add_exts("epub", "mobi", "pdf", "cbc"),
-
-    match_exts(
         "text"
     ).add_exts(
         "txt",
@@ -275,7 +281,11 @@ file_matcher = make_file_matcher(
         "chm",
         "strings",
         "log",
-        "url"
+        "url",
+        "epub",
+        "mobi",
+        "pdf",
+        "cbc"
     ),
 
     match_exts(
@@ -296,3 +306,6 @@ file_matcher = make_file_matcher(
         "archive"
     ).add_exts(*archive_exts)
 )
+
+def match(torrent: Torrent):
+    return title_matcher.match(torrent), file_matcher.match()
