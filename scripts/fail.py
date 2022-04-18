@@ -11,7 +11,7 @@ class SweeperError(Exception):
 
 
 def insert_code(code: str, message: str):
-    return f"{message} [!{code}!]"
+    return f"{message} [[{code}]]"
 
 
 def not_enough_info(message: str, error: bool):
@@ -49,10 +49,10 @@ def raise_bad_input(message: str):
 
 def get_input_dir(var_name: str, var_value: str, can_create=False):
     def raise_err(text: str):
-        raise_bad_input(f"Input {var_name} is bad - {text}")
+        raise_bad_input(f"Input directory named '{var_name}' is bad: {text}")
 
     if not var_value:
-        raise_err("is missing")
+        raise_err("missing")
 
     p = Path(var_value)
     if not p.exists():

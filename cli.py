@@ -1,10 +1,11 @@
 import argparse
+import json
 import sys
 from logging import getLogger
 from pathlib import Path
 from typing import Literal, Optional
 
-from common import Torrent
+from common import Torrent, print_cmd
 from scripts.fail import get_input_dir
 from scripts.sweep_torrent import SweepAction
 
@@ -24,7 +25,7 @@ class SweepArgs(BaseArgs):
     conflict: Literal["indexs", "fail", "overwrite"]
     action: SweepAction
     torrent: Torrent
-    force_group: Optional[Path]
+    force_type: Optional[Path]
     force_target: Optional[Path]
 
 
@@ -32,7 +33,7 @@ logger = getLogger("sweeper")
 
 
 def parse_args():
-    logger.info(f"Sweeper invoked with: \"{' '.join(sys.argv)}\"")
+    logger.info(f"INVOKED: {print_cmd(sys.argv)}")
 
     root_parser = argparse.ArgumentParser(
         description='Torrent sorting script. Can delegate for FileBot'
@@ -62,7 +63,7 @@ def parse_args():
         ]
     )
     sweep.add_argument(
-        "--force_group",
+        "--force_type",
         help="Turn off auto-detect and sweep as a specific content type.",
         required=False,
         default=None,
@@ -102,6 +103,6 @@ def parse_args():
             torrent=Torrent(parsed_args.torrent),
             action=parsed_args.action,
             force_target=parsed_args.force_target,
-            force_group=parsed_args.force_group,
+            force_type=parsed_args.force_type,
             conflict=parsed_args.conflict
         )

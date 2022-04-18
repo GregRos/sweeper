@@ -45,7 +45,7 @@ def run(args: SweepArgs | InfoArgs):
             library=library,
             torrent=args.torrent,
             extractor=extractor,
-            force_group=args.force_group,
+            force_type=args.force_type,
             force_target=args.force_target,
             title_matcher=config.title_matcher,
             content_matcher=config.content_matcher,

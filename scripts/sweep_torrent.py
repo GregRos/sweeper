@@ -42,7 +42,7 @@ class Sweeper:
     filebot: FilebotExecutor
     extractor: Extractor
     force_target: Path
-    force_group: str | None
+    force_type: str | None
     conflict: Conflict
 
     def __init__(
@@ -55,11 +55,11 @@ class Sweeper:
             filebot: FilebotExecutor,
             extractor: Extractor,
             force_target: Path = None,
-            force_group: str = None,
+            force_type: str = None,
             conflict: Conflict = "fail"
     ):
 
-        self.force_group = force_group
+        self.force_type = force_type
         self.force_target = force_target
         self.extractor = extractor
         self.filebot = filebot
@@ -71,7 +71,7 @@ class Sweeper:
         self.conflict = conflict
 
     def assume_torrent(self, type: str):
-        self.force_group = type
+        self.force_type = type
         log_code = "Assumption"
         logger.info(
             f"Assuming torrent is of type '{type}'",
@@ -94,6 +94,7 @@ class Sweeper:
             media_root = self.force_target.absolute()
         else:
             media_root = f'[episode ? "{self.library.shows.absolute()}" : "{self.library.movies.absolute()}"] '
+
         media_path = '[ ~plex.derive[" [tmdb-$id}"][" [$vf, $vc, $ac]"] ]'
         full_path = f"{media_root}/{media_path}".replace("[", "{").replace("]", "}")
         return full_path
@@ -127,22 +128,22 @@ class Sweeper:
         logger.info("Sweeping successful.")
 
     def get_target_by_group(self):
-        if self.force_group == "program":
+        if self.force_type == "program":
             return self.library.programs
-        elif self.force_group == "game":
+        elif self.force_type == "game":
             return self.library.games
-        elif self.force_group == "audio":
+        elif self.force_type == "audio":
             return self.library.audio
-        elif self.force_group == "text":
+        elif self.force_type == "text":
             return self.library.ebooks
-        elif self.force_group == "video":
+        elif self.force_type == "video":
             return None
-        elif self.force_group == "image":
+        elif self.force_type == "image":
             raise NotImplementedError()
 
     def run_sweep(self):
         content_info = self.content_matcher.match(self.torrent)
-        logger.info("Sweeping « %s »", self.torrent.name)
+        logger.info(f"SWEEPING {self.torrent.name}")
         content = content_info[0]
         if content.one_of("archive"):
             logger.info(f"Archive extensions found: {', '.join(content.exts)}")
@@ -154,8 +155,8 @@ class Sweeper:
         content = content_info[0]
         title = title_info[0]
 
-        if self.force_group:
-            logger.info(f"force_group received. Forcing {self.force_group}")
+        if self.force_type:
+            logger.info(f"FORCING type '{self.force_type}'")
         else:
             if not content.is_greater(soft_threshold):
                 # This is an error because it shouldn't happen, as it means this is a weird mixed torrent
@@ -170,7 +171,6 @@ class Sweeper:
                 if not title.is_greater(certain_threshold):
                     not_enough_info(f"Content is unknown, Title is below threshold.", error=True)
                 self.assume_torrent(title.type)
-                self.force_group = title.type
             elif content.type == "program":
                 self.assume_torrent("program")
                 if not title.is_greater(soft_threshold):
@@ -197,7 +197,7 @@ class Sweeper:
                 self.assume_torrent(content.type)
 
         self.force_target = self.force_target or self.get_target_by_group()
-        if self.force_group == "video":
+        if self.force_type == "video":
             self.sweep_filebot()
         else:
             self.sweep_files()

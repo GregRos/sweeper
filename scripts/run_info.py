@@ -13,7 +13,7 @@ def to_content_table(info: List[ContentMatch]):
         [x.type, format_float(x.ratio), format_filesize(x.total), ", ".join(x.exts)] for x in info
     ]
     return f"""
-Content Info
+CONTENT_INFO
 {
     tablizer.format_table(table_rows)
     }    
@@ -27,7 +27,7 @@ def to_title_table(info: List[TitleMatch]):
         ] for x in info
     ]
     return f"""
-Title Info
+TITLE_INFO
 {
     tablizer.format_table(table_rows)
     }    

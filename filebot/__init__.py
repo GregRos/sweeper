@@ -1,10 +1,10 @@
-import itertools
-import sys
 from logging import getLogger
 from pathlib import Path
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 from threading import Thread
 from typing import Literal, TypeAlias, IO, Callable
+
+from common import print_cmd
 
 FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
 FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
@@ -43,16 +43,19 @@ class FilebotExecutor:
         self.exe = exe
 
     def _execute(self, args: list[str], timeout: int):
+        args = [
+            self.exe,
+            *args
+        ]
+        logger.info(f"EXECUTING: {print_cmd(args)}")
         p = Popen(
-            [
-                self.exe,
-                *args
-            ],
+            args,
             stdout=PIPE,
             stderr=PIPE,
             shell=False,
             encoding="ansi"
         )
+        logger.info(f"Spawned process at {p.pid}.")
         read_all(p, timeout)
 
     def down_subs(self, root: Path):
