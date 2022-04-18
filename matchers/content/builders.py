@@ -1,27 +1,32 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Pattern
 
-from matchers.content.matcher import FileMatcher
-from matchers.content.matchers import ContentMatcher
+from .matchers import RegexpExtMatcher, ContentMatcher
 
 
 class ContentMatchBuilder:
     _type: str
-    _matchers: List[FileMatcher]
+    _matchers: List[RegexpExtMatcher]
+
     def __init__(self, type):
         self._type = type
         self._matchers = []
 
     def add_exts(self, *exts: str):
-        self._matchers.extend([
-            FileMatcher(self._type, ext) for ext in exts
-        ])
+        self._matchers.append(RegexpExtMatcher(self._type, "|".join((f".{x}" for x in exts))))
+        return self
+
+    def add_pattern(self, pattern: str | Pattern):
+        self._matchers.append(RegexpExtMatcher(self._type, pattern))
+        return self
 
     def next_group(self, type: str):
         self._type = type
+        return self
 
-    def get(self):
-        return self._matchers
+    def finish(self):
+        return ContentMatcher(self._matchers)
 
-def content_matcher(type: str):
+
+def make_content_matcher(type: str):
     return ContentMatchBuilder(type)

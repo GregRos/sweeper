@@ -1,7 +1,7 @@
-from __future__ import annotations
-
 from pathlib import Path
-from typing import List
+from typing import List, Any
+
+from scripts.fail import SweeperError, raise_bad_input, raise_bad_env
 
 
 def format_filesize(num, suffix="B"):
@@ -17,6 +17,7 @@ def is_dir_empty(dir: Path):
         raise Exception("Not a dir or doesn't exist")
     return not any(dir.iterdir())
 
+
 def get_dir_for_torrent(root: Path, name: str):
     cur = root / name
     index = 1
@@ -27,8 +28,9 @@ def get_dir_for_torrent(root: Path, name: str):
 
     return cur
 
+
 class Tablizer:
-    def __init__(self, column = "|", row_num = True, spacing = 1):
+    def __init__(self, column="|", row_num=True, spacing=1):
         self.spacing = spacing
         self.row_num = row_num
         self.column = column
@@ -61,15 +63,19 @@ class Tablizer:
 def format_float(x: float):
     return "{:.2f}".format(x)
 
-class LibraryRoots:
-    def __init__(
-            self,
-            audio: str,
-            programs: str,
-            games: str,
-            movies: str,
-            anime: str,
-            shows: str,
-            ebooks: str
-    ):
-        self.audio = audio
+
+def uproot_path(target: Path, old_root: Path, new_root: Path):
+    rel = target.relative_to(old_root)
+    return new_root.joinpath(rel)
+
+
+class LibraryRoots(object):
+    def __init__(self, root: Path, names: list[str]):
+        for name in names:
+            p = root.joinpath(name)
+            if not p.exists():
+                p.mkdir()
+            if p.is_file():
+                raise_bad_env(f"Library path {p} is a file")
+            self.__setattr__(name, root.joinpath(name))
+

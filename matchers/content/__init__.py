@@ -1,2 +1,2 @@
 from .matchers import ContentMatch, ContentMatcher
-from .builders import ExtensionMatchBuilder, match_exts, make_content_matcher
+from .builders import make_content_matcher

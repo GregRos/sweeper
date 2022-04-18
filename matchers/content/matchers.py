@@ -1,9 +1,21 @@
+import re
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Iterable
+from typing import List, Iterable, Pattern, AnyStr
 
 from common.torrent import Torrent
-from .matcher import FileMatcher
+
+
+class RegexpExtMatcher:
+    def __init__(self, type: str, regexp: str | Pattern):
+        self._type = type
+        self._pattern = re.compile(regexp)
+
+    def get_type(self, file: Path):
+        return self._type
+
+    def test(self, file: Path):
+        return self._pattern.fullmatch(file.suffix)
 
 
 class ContentMatch:
@@ -13,18 +25,27 @@ class ContentMatch:
         self.total = total
         self.exts = exts
 
-    def is_mostly(self, what: str, at = 0.5):
-        return self.type == what and self.ratio >= at
+    def one_of(self, *options: str):
+        return self.type in options
+
+    def is_greater(self, min: float, type: str = None):
+        if self.ratio < min:
+            return False
+        return type is None or self.type == type
+
+
+no_match = "Unknown"
+
 
 class ContentMatcher:
-    extensions: dict[str, FileMatcher]
-    def __init__(self, extensions: List[FileMatcher]):
-        self.extensions = defaultdict(lambda : ExtensionMatcher("Unknown", "???"))
-        for x in extensions:
-            self.extensions[x.ext] = x
+    _matchers: list[RegexpExtMatcher]
+
+    def __init__(self, extensions: List[RegexpExtMatcher]):
+        self._matchers = extensions
 
     def _classify_file(self, file: Path):
-        return self.extensions[file.suffix[1:]].get_type(file)
+        return next((matcher.get_type(file) for matcher in self._matchers if matcher.test(file)),
+                    "Unknown")
 
     def match(self, torrent: Torrent) -> List[ContentMatch]:
         total_size = 0
@@ -52,6 +73,6 @@ class ContentMatcher:
 
         ratio_list = sorted(
             list(content_matches.values())
-        , key=lambda x: x.ratio, reverse=True)
+            , key=lambda x: x.ratio, reverse=True)
 
         return ratio_list

@@ -1,23 +1,39 @@
-from extract.extractor import archive_exts
-from matchers.content.builders import content_matcher
-from matchers.title.builders import title_matcher
-from common import Torrent
-from os import getenv
+import sys
+from logging import getLogger, StreamHandler, Formatter
+from logging.handlers import RotatingFileHandler
 
-audio_root = getenv("SWEEP_AUDIO")
-image_root = getenv("SWEEP_IMAGES")
-ebook_root = getenv("SWEEP_EBOOKS")
-movie_root = getenv("SWEEP_MOVIES")
-show_root = getenv("SWEEP_SHOWS")
-game_root = getenv("SWEEP_GAMES")
-program_root = getenv("SWEEP_PROGRAMS")
+from extract import archive_exts
+from extract.extractor import multipart_archive_pattern, Extractor
+from filebot import FilebotExecutor
+from matchers import make_content_matcher
+from matchers import make_title_matcher
+from scripts.fail import get_path_env
+from util import LibraryRoots
 
-titles = make_title_matcher(
-    # RELEASE TYPES
-    uniform_title_matcher(
-        "game",
-        "video"
-    ).add_words("GameMovieReleaseType", 90, [
+filebot_runner = FilebotExecutor(
+    exe=get_path_env("SWEEPER_FILEBOT", is_dir=False, check_exe=True)
+)
+
+extractor = Extractor(
+    working_dir=get_path_env("SWEEPER_WORKING_DIR", is_dir=True, can_create=True)
+)
+
+library = LibraryRoots(
+    get_path_env("SWEEPER_LIBRARY", is_dir=True, can_create=True),
+    [
+        "movies",
+        "audio",
+        "shows",
+        "programs",
+        "games",
+        "ebooks"
+    ]
+)
+title_matcher = make_title_matcher(
+    ["game", "video"]
+).add_subgroup(
+    "GameMovieReleaseType",
+    90, [
         "Remastered",
         "Proper",
         "beta",
@@ -25,12 +41,12 @@ titles = make_title_matcher(
         "Preload",
         "Repack",
         r"multi\d*",
-    ]),
-
-    uniform_title_matcher(
-        "game",
-        "program"
-    ).add_words("Modification", 60, [
+    ]
+).next_group(
+    ["game", "program"]
+).add_subgroup(
+    "Modification",
+    60, [
         "Crack",
         "Activator",
         "Activated",
@@ -39,20 +55,29 @@ titles = make_title_matcher(
         "Unlocked",
         "Patch",
         "Update"
-    ]).add_words("VersionPattern", 50, [
+    ]
+).add_subgroup(
+    "VersionPattern",
+    50, [
         # It's low because the last pattern will match the previous one,
         # So actually it's very high sensitivity
         r"v\d+\.\d+",
         r"v\d+\.\d+\.\d+",
         r"v\d+\.\d+\.\d+\.\d+"
-    ]).add_words("IsoFile", 50, [
+    ]
+).add_subgroup(
+    "IsoFile",
+    50, [
         "ISO"
-    ]),
-
-    refined_title_matcher({
+    ]
+).next_group(
+    {
         "game": 1,
         "program": 2
-    }).add_words("PcPlatform", 90, [
+    }
+).add_subgroup(
+    "PcPlatform",
+    90, [
         "x86",
         "x64",
         r"32\s?bit",
@@ -66,18 +91,22 @@ titles = make_title_matcher(
         "Mac",
         "win32",
         "win64"
-    ]).add_words("ProgramKeyword", 50, [
+    ]
+).add_subgroup(
+    "ProgramKeyword",
+    50, [
         "Pro",
         "Professional",
         "Retail",
         "RTM",
         r"SP\d",
         "OEM"
-    ]),
-
-    uniform_title_matcher(
-        "game"
-    ).add_words("GamePlatform", 90, [
+    ]
+).next_group(
+    ["game"]
+).add_subgroup(
+    "GamePlatform",
+    90, [
         "PS[43]",
         "3?DS",
         r"X\s?BOX",
@@ -86,7 +115,9 @@ titles = make_title_matcher(
         "BATTLENET",
         "GOG",
         "WII",
-    ]).add_words("GameGroup", 80, [
+    ]
+).add_subgroup(
+    "GameGroup", 80, [
         "FLT",
         "SKIDROW",
         "CODEX",
@@ -102,14 +133,16 @@ titles = make_title_matcher(
         "HOODLUM",
         "PLAZA",
         "EMPRESS"
-    ]).add_words("GameKeyword", 60, [
+    ]
+).add_subgroup(
+    "GameKeyword", 60, [
         "DLC",
         "Simulator"
-    ]),
-
-    uniform_title_matcher(
-        "video"
-    ).add_words("VideoQuality", 80, [
+    ]
+).next_group(
+    ["video"]
+).add_subgroup(
+    "VideoQuality", 80, [
         "(1080|720|540|1440|2160|480)[pi]",
         "10bit",
         "HDR",
@@ -121,20 +154,26 @@ titles = make_title_matcher(
         "DDP5",
         "HMAX",
         "BluRay"
-    ]).add_words("MovieAudioQuality", 30, [
+    ]
+).add_subgroup(
+    "MovieAudioQuality", 30, [
         "5.1",
         "7.1",
         "DTS",
         "DDP",
         "ATMOS",
         r"\dch"
-    ]).add_words("VideoEncoding", 80, [
+    ]
+).add_subgroup(
+    "VideoEncoding", 80, [
         "HEVC",
         "XVID",
         r"[XH][\-.]?26[3456]",
         "MP4",
         "MKV"
-    ]).add_words("VideoSource", 80, [
+    ]
+).add_subgroup(
+    "VideoSource", 80, [
         "WEB-DL",
         "WEBDL",
         "WEB",
@@ -145,7 +184,10 @@ titles = make_title_matcher(
         "HDTV",
         "HDTVRip",
         "AMZN",
-    ]).add_words("VideoGroup", 80, [
+    ]
+).add_subgroup(
+    "VideoGroup",
+    80, [
         "ettv",
         "YTS",
         "YIFY",
@@ -156,31 +198,42 @@ titles = make_title_matcher(
         "RARBG",
         "SPARKS",
         "GECKOS",
-    ]).add_words("SeasonPattern", 40, [
+    ]
+).add_subgroup(
+    "SeasonPattern",
+    40,
+    [
         r"s[01234]\d"
-    ]).add_words("EpisodePattern", 40, [
+    ]
+).add_subgroup(
+    "EpisodePattern",
+    40, [
         r"s[01234]\de\d\d"
-    ]).add_words("VideoKeyword", 50, [
+    ]
+).add_subgroup(
+    "VideoKeyword", 50, [
         "Episode",
         "Season",
         "Movie",
         "Series"
-    ]),
-
-    uniform_title_matcher(
-        "video",
-        "audio"
-    ).add_words("AudioEncoding", 80, [
+    ]
+).next_group([
+    "video",
+    "audio"
+]
+).add_subgroup(
+    "AudioEncoding", 80, [
         "AC3",
         "AAC",
         "AAC2",
         "MP3",
         "FLAC"
-    ]),
-
-    uniform_title_matcher(
-        "audio"
-    ).add_words("AudioKeyword", 60, [
+    ]
+).next_group([
+    "audio"
+]
+).add_subgroup(
+    "AudioKeyword", 60, [
         r"\dCD",
         "single",
         "album",
@@ -192,120 +245,177 @@ titles = make_title_matcher(
         "audiobook",
         "unabridged",
         "abridged"
-    ]).add_words("AudioQuality", 90, [
+    ]
+).add_subgroup(
+    "AudioQuality", 90, [
         r"(320|64|128|256|224|32)\s?kbps",
         r"(24|16)\s?bit",
         r"44.1khz",
         "44khz",
         "44000hz"
-    ]),
-
-    uniform_title_matcher(
-        "ebook"
-    ).add_words("EbookFormat", 93, [
+    ]
+).next_group([
+    "text"
+]
+).add_subgroup(
+    "EbookFormat", 93, [
         "EPIB",
         "MOBI",
         "PDF",
-    ]),
+    ]
+).finish()
+
+content_matcher = make_content_matcher(
+    "video"
+).add_exts(
+    "ts",
+    "mkv",
+    "avi",
+    "flv",
+    "mp4",
+    "mpg",
+    "mov",
+    "vob",
+    "wmv",
+    "mkv",
+    "webm",
+    "mpeg",
+    "ogv",
+    "m4v",
+    "h264",
+    "srt",
+    "ssa"
+).next_group(
+    "audio"
+).add_exts(
+    "mid",
+    "midi",
+    "mp3",
+    "wav",
+    "wma",
+    "aac",
+    "flac",
+    "mka",
+    "m4a",
+    "m4b",
+    "ac3"
+).next_group(
+    "program"
+).add_exts(
+    "exe",
+    "dll",
+    "msi",
+    "apk",
+    "ahk",
+    "jar",
+    "cmd",
+    "bin",
+    "iso",
+    "cue",
+    "js",
+    "dmg",
+    "rom",
+    "mdf",
+    "img",
+    "cab",
+    "mpq",
+    "dat"
+).next_group(
+    "unsortable"
+).add_exts(
+    "txt",
+    "nfo",
+    "markdown",
+    "md",
+    "markd",
+    "mmd",
+    "xsl",
+    "xslx",
+    "xml",
+    "json",
+    "yaml",
+    "yml",
+    "rtf",
+    "chm",
+    "strings",
+    "log",
+    "url",
+    "sfv",
+    "tex",
+    "css",
+
+).next_group(
+    "text"
+).add_exts(
+    "docx",
+    "odt",
+    "doc",
+    "html",
+    "djvu",
+    "epub",
+    "mobi",
+    "pdf",
+    "htm",
+    "fb2",
+    "azw",
+    "azw3",
+    "kf8",
+    "kfx,"
+    "prc",
+    "xps",
+    "oxps"
+).next_group(
+    "image"
+).add_exts(
+    "jpg",
+    "jpeg",
+    "gif",
+    "png",
+    "tiff",
+    "bmp",
+    "svg",
+    "ico",
+    "icns"
+).next_group(
+    "archive"
+).add_exts(
+    *archive_exts
+).add_pattern(multipart_archive_pattern).finish()
+
+logger = getLogger("sweeper")
+logger.addHandler(
+    RotatingFileHandler(
+        filename=get_path_env("SWEEPER_LOGS", is_dir=True, can_create=True).joinpath("sweeper.log"),
+        # 10 MB in size
+        maxBytes=10 ** 7,
+        # Max 1 GB of logs
+        backupCount=100,
+        encoding="utf8"
+    )
 )
 
-file_matcher = make_content_matcher(
-    match_exts(
-        "video"
-    ).add_exts(
-        "ts",
-        "mkv",
-        "avi",
-        "flv",
-        "mp4",
-        "mpg",
-        "mov",
-        "vob",
-        "wmv",
-        "mkv",
-        "webm",
-        "mpeg",
-        "ogv",
-        "m4v",
-        "h264",
-        "srt",
-        "ssa"),
+info_handler = StreamHandler(
+    stream=sys.stdout
+)
+info_handler.addFilter(lambda x: x.levelno <= 20)
+err_handler = StreamHandler(
+    stream=sys.stderr
+)
+err_handler.setLevel(30)
 
-    match_exts(
-        "audio"
-    ).add_exts("mid", "midi", "mp3", "wav", "wma", "aac", "flac", "mka", "m4a", "m4b", "ac3"),
-
-    match_exts(
-        "program"
-    ).add_exts(
-        "exe",
-        "dll",
-        "msi",
-        "apk",
-        "ahk",
-        "jar",
-        "cmd",
-        "bin",
-        "iso",
-        "cue",
-        "js",
-        "dmg",
-        "rom",
-        "mdf",
-        "img",
-        "cab",
-        "mpq",
-        "part"
-    ),
-
-    match_exts(
-        "text"
-    ).add_exts(
-        "txt",
-        "nfo",
-        "docx",
-        "markdown",
-        "md",
-        "markd",
-        "mmd",
-        "odf",
-        "doc",
-        "xsl",
-        "xslx",
-        "xml",
-        "json",
-        "yaml",
-        "yml",
-        "rtf",
-        "html",
-        "chm",
-        "strings",
-        "log",
-        "url",
-        "epub",
-        "mobi",
-        "pdf",
-        "cbc"
-    ),
-
-    match_exts(
-        "image"
-    ).add_exts(
-        "jpg",
-        "jpeg",
-        "gif",
-        "png",
-        "tiff",
-        "bmp",
-        "svg",
-        "ico",
-        "icns"
-    ),
-
-    match_exts(
-        "archive"
-    ).add_exts(*archive_exts)
+logger.addHandler(
+    err_handler
+)
+logger.addHandler(
+    info_handler
 )
 
-def match(torrent: Torrent):
-    return title_matcher.match(torrent), file_matcher.match()
+
+
+for handler in logger.handlers:
+    handler.setFormatter(
+        Formatter(
+            fmt="%(asctime)s %(levelname)s: %(message)s",
+            datefmt="[%d]%H:%M:%S"
+        )
+    )

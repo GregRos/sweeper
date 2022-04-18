@@ -1,27 +1,28 @@
-from abc import abstractmethod
+import sys
+from pathlib import Path
 from subprocess import Popen
-from typing import Literal, TypeAlias, Protocol, List
+from typing import Literal, TypeAlias
 
-from common import Torrent
+FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
+FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
 
-Action: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
-Conflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
 
-class FilebotAction(Protocol):
-    @abstractmethod
-    def get_args(self) -> List[str]: pass
+class FilebotExecutor:
+    def __init__(self, exe: str):
+        self.exe = exe
 
-class GetSubs(FilebotAction):
-    _torrent: Torrent
+    def _execute(self, args: list[str]):
+        p = Popen([
+            self.exe,
+            *args
+        ], stdout=sys.stdout, stderr=sys.stderr, shell=False)
+        return p
 
-    def __init__(self, torrent: Torrent):
-        self._torrent = torrent
-
-    def get_args(self):
-        return [
+    def down_subs(self, root: Path):
+        self._execute([
             "-get-subtitles",
             "-r",
-            self._torrent.root.absolute(),
+            root.absolute(),
             "-non-strict",
             "--lang",
             "en"
@@ -29,46 +30,18 @@ class GetSubs(FilebotAction):
             "srt",
             "--encoding",
             "utf-8"
-        ]
+        ]).wait(20)
 
-
-class Rename(FilebotAction):
-    torrent: Torrent
-    action: Action
-    format: str
-    conflict: Conflict
-    file_filter: str
-    output: str
-    def __init__(self, torrent: Torrent, action: Action, format: str, conflict: Conflict, file_filter: str, output: str):
-        self.output = output
-        self.file_filter = file_filter
-        self.conflict = conflict
-        self.format = format
-        self.action = action
-        self.torrent = torrent
-
-    def get_args(self):
-        return [
+    def rename(self, root: Path, action: FilebotAction, format: str, conflict: FilebotConflict):
+        self._execute([
             "-rename",
             "-r",
-            self.torrent.root.absolute(),
+            root.absolute(),
             "-non-strict",
             "--format",
-            self.format,
+            format,
             "--conflict",
-            self.conflict,
-            "--file-filter",
-            self.file_filter,
-            "--output",
-            self.output
-        ]
-
-class FilebotExecutor:
-    def __init__(self, exe: str):
-        self.exe = exe
-
-    def run(self, cmd: FilebotAction):
-        Popen([
-            self.exe,
-            *cmd.get_args()
-        ])
+            conflict,
+            "--action",
+            action
+        ]).wait(60)

@@ -1,5 +1,4 @@
-import matchers.title
-import matchers.content
-from matchers.content import ContentMatch
+from .title import make_title_matcher, TitleMatcher, TitleMatch
+from .content import make_content_matcher, ContentMatcher, ContentMatch
 
 
