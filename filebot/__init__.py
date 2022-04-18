@@ -1,22 +1,59 @@
+import itertools
 import sys
+from logging import getLogger
 from pathlib import Path
-from subprocess import Popen
-from typing import Literal, TypeAlias
+from subprocess import Popen, PIPE, STDOUT
+from threading import Thread
+from typing import Literal, TypeAlias, IO, Callable
 
 FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
 FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
+
+logger = getLogger("sweeper")
+
+
+def read_all(p: Popen, timeout: int):
+    def read(stream: IO, action: Callable[[str], None]):
+        for line in stream:
+            action(line)
+
+    r_stdout = Thread(
+        target=lambda: read(
+            p.stdout,
+            lambda s: logger.info(f"[FILEBOT] OUT :: {s.strip()}")
+        )
+    )
+    r_stderr = Thread(
+        target=lambda: read(
+            p.stderr,
+            lambda s: logger.warning(f"[FILEBOT] ERR :: {s.strip()}")
+        )
+    )
+    r_stdout.start()
+    r_stderr.start()
+    p.wait(timeout)
+    if p.returncode > 0:
+        logger.error(f"[FILEBOT] Return code {p.returncode}")
+    else:
+        logger.info(f"[FILEBOT] Finished successfuly.")
 
 
 class FilebotExecutor:
     def __init__(self, exe: str):
         self.exe = exe
 
-    def _execute(self, args: list[str]):
-        p = Popen([
-            self.exe,
-            *args
-        ], stdout=sys.stdout, stderr=sys.stderr, shell=False)
-        return p
+    def _execute(self, args: list[str], timeout: int):
+        p = Popen(
+            [
+                self.exe,
+                *args
+            ],
+            stdout=PIPE,
+            stderr=PIPE,
+            shell=False,
+            encoding="ansi"
+        )
+        read_all(p, timeout)
 
     def down_subs(self, root: Path):
         self._execute([
@@ -30,7 +67,8 @@ class FilebotExecutor:
             "srt",
             "--encoding",
             "utf-8"
-        ]).wait(20)
+        ], 20
+        )
 
     def rename(self, root: Path, action: FilebotAction, format: str, conflict: FilebotConflict):
         self._execute([
@@ -39,9 +77,10 @@ class FilebotExecutor:
             root.absolute(),
             "-non-strict",
             "--format",
-            format,
+            format.replace("\\", "/"),
             "--conflict",
             conflict,
             "--action",
             action
-        ]).wait(60)
+        ], 60
+        )

@@ -62,17 +62,19 @@ class TitleMatcher:
             TitleMatch(t, chance_none / (1 - P), all_matched_by_type[t]) for t, P in
             all_positive_events.items()
         ]
-
-        # This is helpful for later.
         unknown_chance = TitleMatch("Unknown", chance_none, [])
-        final_chance_by_group.append(unknown_chance)
 
-        # We return a match list in descending order
-        chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)
+        if len(final_chance_by_group) > 0:
+            # We return a match list in descending order
+            chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)
 
-        # This is a heuristic correction to bad math that seems to work in practice:
-        chance_some = 1 - chance_none
-        scale_factor = chance_some / chances_by_max[0].chance
-        for c in final_chance_by_group:
-            c.chance *= scale_factor
-        return chances_by_max
+            # This is a heuristic correction to bad math that seems to work in practice:
+            chance_some = 1 - chance_none
+            scale_factor = chance_some / chances_by_max[0].chance
+            for c in final_chance_by_group:
+                c.chance *= scale_factor
+            # This is helpful for later.
+            final_chance_by_group.append(unknown_chance)
+            return chances_by_max
+        else:
+            return [unknown_chance]

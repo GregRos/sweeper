@@ -1,10 +1,6 @@
-import sys
 from logging import getLogger
 from os import getenv, access, X_OK
 from pathlib import Path
-from typing import NoReturn
-
-from common import Torrent
 
 logger = getLogger("sweeper")
 
@@ -15,19 +11,7 @@ class SweeperError(Exception):
 
 
 def insert_code(code: str, message: str):
-    return f"!{code}! {message}"
-
-
-class DetectionMismatch(Warning):
-    def __init__(self, message: str):
-        super().__init__(f"!DetectionMismatch! {message}")
-
-    pass
-
-
-class LowInfo(Warning):
-    def __init__(self, message: str):
-        super().__init__(f"!LowInfo! {message}")
+    return f"{message} [!{code}!]"
 
 
 def not_enough_info(message: str, error: bool):
@@ -35,8 +19,7 @@ def not_enough_info(message: str, error: bool):
         raise SweeperError("LowInfo", message)
     else:
         logger.warning(
-            message,
-            exc_info=LowInfo(message)
+            insert_code("LowInfo", message)
         )
 
 
@@ -46,15 +29,18 @@ def detector_mismatch(message: str, error: bool):
         raise SweeperError(err_code, message)
     else:
         logger.warning(
-            message,
-            exc_info=DetectionMismatch(message),
-            stack_info=
+            insert_code(err_code, message)
         )
 
 
-def invalid_input(var_name: str, expected: str):
-    err_code = "InvalidInput"
-    raise SweeperError(err_code, f"Bad input {var_name} - expected {expected}.")
+def file_exists(message: str, error: bool):
+    err_code = "FileExists"
+    if error:
+        raise SweeperError(err_code, message)
+    else:
+        logger.warning(
+            insert_code(err_code, message)
+        )
 
 
 def raise_bad_input(message: str):
@@ -65,7 +51,7 @@ def get_input_dir(var_name: str, var_value: str, can_create=False):
     def raise_err(text: str):
         raise_bad_input(f"Input {var_name} is bad - {text}")
 
-    if not var_name:
+    if not var_value:
         raise_err("is missing")
 
     p = Path(var_value)
@@ -82,12 +68,13 @@ def raise_bad_env(message: str):
     raise SweeperError("BadEnv", message)
 
 
-def get_path_env(var_name: str, is_dir: bool = None, can_create: bool = False, check_exe=False):
+def get_path_env(var_name: str, is_dir: bool = None, can_create: bool = False, check_exe=False, default=None):
     def raise_err(rest: str):
         raise_bad_env(f"Bad environment var {var_name} - {rest}")
 
     if not var_name:
-        raise_err("is empty")
+        return default or raise_err("missing")
+
     value = getenv(var_name)
     if value is None:
         raise_err("missing")

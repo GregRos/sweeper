@@ -1,9 +1,11 @@
 import argparse
+import sys
+from logging import getLogger
 from pathlib import Path
 from typing import Literal, Optional
 
 from common import Torrent
-from scripts.fail import SweeperError, invalid_input, get_input_dir
+from scripts.fail import get_input_dir
 from scripts.sweep_torrent import SweepAction
 
 
@@ -19,13 +21,19 @@ class InfoArgs(BaseArgs):
 
 class SweepArgs(BaseArgs):
     command: Literal["sweep"]
+    conflict: Literal["indexs", "fail", "overwrite"]
     action: SweepAction
     torrent: Torrent
     force_group: Optional[Path]
     force_target: Optional[Path]
 
 
+logger = getLogger("sweeper")
+
+
 def parse_args():
+    logger.info(f"Sweeper invoked with: \"{' '.join(sys.argv)}\"")
+
     root_parser = argparse.ArgumentParser(
         description='Torrent sorting script. Can delegate for FileBot'
     )
@@ -42,6 +50,16 @@ def parse_args():
         "torrent",
         help="root folder containing the torrent",
         type=lambda s: get_input_dir("torrent", s)
+    )
+    sweep.add_argument(
+        "--conflict",
+        help="What to do in case dest already exists.",
+        type=str,
+        choices=[
+            "index",
+            "fail",
+            "overwrite"
+        ]
     )
     sweep.add_argument(
         "--force_group",
@@ -72,17 +90,18 @@ def parse_args():
         "hard"
     ]
                        )
-    raw_args = root_parser.parse_args()
-    if raw_args.command == "info":
+    parsed_args = root_parser.parse_args()
+    if parsed_args.command == "info":
         return InfoArgs(
             command="info",
-            torrent=Torrent(raw_args.torrent)
+            torrent=Torrent(parsed_args.torrent)
         )
     else:
         return SweepArgs(
             command="sweep",
-            torrent=Torrent(raw_args.torrent),
-            action=raw_args.action,
-            force_target=raw_args.force_target and Path(raw_args.force_target),
-            force_group=raw_args.force_group
+            torrent=Torrent(parsed_args.torrent),
+            action=parsed_args.action,
+            force_target=parsed_args.force_target,
+            force_group=parsed_args.force_group,
+            conflict=parsed_args.conflict
         )

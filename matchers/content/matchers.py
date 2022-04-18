@@ -44,8 +44,10 @@ class ContentMatcher:
         self._matchers = extensions
 
     def _classify_file(self, file: Path):
-        return next((matcher.get_type(file) for matcher in self._matchers if matcher.test(file)),
-                    "Unknown")
+        return next(
+            (matcher.get_type(file) for matcher in self._matchers if matcher.test(file)),
+            "Unknown"
+        )
 
     def match(self, torrent: Torrent) -> List[ContentMatch]:
         total_size = 0
@@ -73,6 +75,7 @@ class ContentMatcher:
 
         ratio_list = sorted(
             list(content_matches.values())
-            , key=lambda x: x.ratio, reverse=True)
+            , key=lambda x: x.ratio, reverse=True
+        )
 
         return ratio_list

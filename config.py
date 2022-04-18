@@ -1,6 +1,7 @@
 import sys
 from logging import getLogger, StreamHandler, Formatter
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from extract import archive_exts
 from extract.extractor import multipart_archive_pattern, Extractor
@@ -10,25 +11,6 @@ from matchers import make_title_matcher
 from scripts.fail import get_path_env
 from util import LibraryRoots
 
-filebot_runner = FilebotExecutor(
-    exe=get_path_env("SWEEPER_FILEBOT", is_dir=False, check_exe=True)
-)
-
-extractor = Extractor(
-    working_dir=get_path_env("SWEEPER_WORKING_DIR", is_dir=True, can_create=True)
-)
-
-library = LibraryRoots(
-    get_path_env("SWEEPER_LIBRARY", is_dir=True, can_create=True),
-    [
-        "movies",
-        "audio",
-        "shows",
-        "programs",
-        "games",
-        "ebooks"
-    ]
-)
 title_matcher = make_title_matcher(
     ["game", "video"]
 ).add_subgroup(
@@ -385,7 +367,11 @@ content_matcher = make_content_matcher(
 logger = getLogger("sweeper")
 logger.addHandler(
     RotatingFileHandler(
-        filename=get_path_env("SWEEPER_LOGS", is_dir=True, can_create=True).joinpath("sweeper.log"),
+        filename=get_path_env(
+            "SWEEPER_LOGS",
+            is_dir=True,
+            can_create=True
+        ).joinpath("sweeper.log"),
         # 10 MB in size
         maxBytes=10 ** 7,
         # Max 1 GB of logs
@@ -397,11 +383,12 @@ logger.addHandler(
 info_handler = StreamHandler(
     stream=sys.stdout
 )
-info_handler.addFilter(lambda x: x.levelno <= 20)
+info_handler.addFilter(lambda x: x.levelno <= 30)
+info_handler.setLevel(10)
 err_handler = StreamHandler(
     stream=sys.stderr
 )
-err_handler.setLevel(30)
+err_handler.setLevel(40)
 
 logger.addHandler(
     err_handler
@@ -409,8 +396,7 @@ logger.addHandler(
 logger.addHandler(
     info_handler
 )
-
-
+logger.setLevel(10)
 
 for handler in logger.handlers:
     handler.setFormatter(
