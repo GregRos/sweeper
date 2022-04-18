@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from common import Torrent, print_cmd
+from filebot import FilebotSubtype
 from scripts.fail import get_input_dir
 from scripts.sweep_torrent import SweepAction
 
@@ -27,13 +28,23 @@ class SweepArgs(BaseArgs):
     torrent: Torrent
     force_type: Optional[Path]
     force_target: Optional[Path]
+    force_filebot_subtype: FilebotSubtype
 
 
 logger = getLogger("sweeper")
 
+def parse_force_type(force_type: str):
+    if force_type:
+        split = force_type.split("/")
+        if len(split) > 1:
+            return split
+        else:
+            return [force_type, None]
+    else:
+        return [None, None]
 
 def parse_args():
-    logger.info(f"INVOKED: {print_cmd(sys.argv)}")
+    logger.info(f"INVOKED {print_cmd(sys.argv)}")
 
     root_parser = argparse.ArgumentParser(
         description='Torrent sorting script. Can delegate for FileBot'
@@ -98,11 +109,14 @@ def parse_args():
             torrent=Torrent(parsed_args.torrent)
         )
     else:
+        force_type, force_subtype = parse_force_type(parsed_args.force_type)
+
         return SweepArgs(
             command="sweep",
             torrent=Torrent(parsed_args.torrent),
             action=parsed_args.action,
             force_target=parsed_args.force_target,
-            force_type=parsed_args.force_type,
-            conflict=parsed_args.conflict
+            force_type=force_type,
+            conflict=parsed_args.conflict,
+            force_filebot_subtype=force_subtype
         )

@@ -135,7 +135,8 @@ title_matcher = make_title_matcher(
         "TrueHD",
         "DDP5",
         "HMAX",
-        "BluRay"
+        r"Blu-?Ray",
+        "Hi10"
     ]
 ).add_subgroup(
     "MovieAudioQuality", 30, [

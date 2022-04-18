@@ -25,8 +25,9 @@ def get_dir_for_torrent(root: Path, name: str):
         if is_dir_empty(cur):
             return cur
         cur = root / f"{name}.{index}"
+        index += 1
 
-    return cur
+    return cur, index
 
 
 class Tablizer:

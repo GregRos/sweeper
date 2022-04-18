@@ -49,7 +49,8 @@ def run(args: SweepArgs | InfoArgs):
             force_target=args.force_target,
             title_matcher=config.title_matcher,
             content_matcher=config.content_matcher,
-            conflict=args.conflict
+            conflict=args.conflict,
+            force_filebot_type=args.force_filebot_subtype
         ).run_sweep()
 
 

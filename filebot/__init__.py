@@ -5,10 +5,11 @@ from threading import Thread
 from typing import Literal, TypeAlias, IO, Callable
 
 from common import print_cmd
+from scripts.fail import SweeperError
 
 FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
 FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
-
+FilebotSubtype: TypeAlias = Literal["movie", "episode", "anime"]
 logger = getLogger("sweeper")
 
 
@@ -47,7 +48,7 @@ class FilebotExecutor:
             self.exe,
             *args
         ]
-        logger.info(f"EXECUTING: {print_cmd(args)}")
+        logger.info(f"EXECUTING {print_cmd(args)}")
         p = Popen(
             args,
             stdout=PIPE,
@@ -73,7 +74,26 @@ class FilebotExecutor:
         ], 20
         )
 
-    def rename(self, root: Path, action: FilebotAction, format: str, conflict: FilebotConflict):
+    def _get_db_for_type(self, type: FilebotSubtype = None):
+        if type is None:
+            return []
+        if type == "show":
+            return ["--db", "TheMovieDB::TV"]
+        elif type == "movie":
+            return ["--db", "TheMovieDB"]
+        elif type == "anime":
+            return ["--db", "AniDB"]
+        else:
+            raise SweeperError("BAD_FILEBOT_TYPE", f"Unknown filebot type '{type}'.")
+
+    def rename(
+            self,
+            root: Path,
+            action: FilebotAction,
+            format: str,
+            conflict: FilebotConflict,
+            force_type: FilebotSubtype,
+    ):
         self._execute([
             "-rename",
             "-r",
@@ -84,6 +104,9 @@ class FilebotExecutor:
             "--conflict",
             conflict,
             "--action",
-            action
+            action,
+            *self._get_db_for_type(force_type),
+            "-no-history"
+
         ], 60
         )

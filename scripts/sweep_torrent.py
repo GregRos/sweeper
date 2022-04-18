@@ -6,7 +6,7 @@ from typing import Literal, TypeAlias, Any
 
 from common import Torrent
 from extract import Extractor
-from filebot import FilebotExecutor, FilebotAction
+from filebot import FilebotExecutor, FilebotAction, FilebotSubtype
 from matchers import TitleMatcher, ContentMatcher
 from scripts.fail import not_enough_info, detector_mismatch, \
     file_exists, raise_bad_input
@@ -17,7 +17,6 @@ logger = logging.getLogger("sweeper")
 Conflict: TypeAlias = Literal["overwrite", "index", "fail"]
 
 SweepAction: TypeAlias = Literal["copy", "hard", "move"]
-base_threshold = 0.55
 soft_threshold = 0.8
 hard_threshold = 0.9
 certain_threshold = 0.93
@@ -43,6 +42,7 @@ class Sweeper:
     extractor: Extractor
     force_target: Path
     force_type: str | None
+    force_filebot_type: FilebotSubtype
     conflict: Conflict
 
     def __init__(
@@ -56,11 +56,13 @@ class Sweeper:
             extractor: Extractor,
             force_target: Path = None,
             force_type: str = None,
+            force_filebot_type: FilebotSubtype = None,
             conflict: Conflict = "fail"
     ):
 
         self.force_type = force_type
         self.force_target = force_target
+        self.force_filebot_type = force_filebot_type
         self.extractor = extractor
         self.filebot = filebot
         self.content_matcher = content_matcher
@@ -70,51 +72,65 @@ class Sweeper:
         self.torrent = torrent
         self.conflict = conflict
 
-    def assume_torrent(self, type: str):
+    def _assume_type(self, type: str, based_on: str):
         self.force_type = type
         log_code = "Assumption"
         logger.info(
-            f"Assuming torrent is of type '{type}'",
+            f"ASSUMING torrent is of type '{type}' ({based_on})",
             extra={
                 "type": log_code
             }
         )
 
-    def sweep_filebot(self):
-        logger.info("Chose to sweep via filebot")
+    def _sweep_filebot(self):
+        logger.info(f"CHOSE_METHOD :: filebot ({self.action})")
         self.filebot.rename(
             root=self.torrent.root,
-            format=self.get_filebot_format(),
+            format=self._get_filebot_format(),
             conflict=self.conflict,
-            action=get_filebot_action(self.action)
+            action=get_filebot_action(self.action),
+            force_type=self.force_filebot_type
         )
 
-    def get_filebot_format(self):
+    def _get_filebot_format(self):
         if self.force_target:
             media_root = self.force_target.absolute()
         else:
-            media_root = f'[episode ? "{self.library.shows.absolute()}" : "{self.library.movies.absolute()}"] '
+            media_root = f'[episode ? "{self.library.shows.absolute()}" : "{self.library.movies.absolute()}"]'
 
-        media_path = '[ ~plex.derive[" [tmdb-$id}"][" [$vf, $vc, $ac]"] ]'
-        full_path = f"{media_root}/{media_path}".replace("[", "{").replace("]", "}")
+        media_root = media_root
+        media_name = '[ ~plex.derive[" [tmdb-$id}"][" [$vf, $vc, $ac]"] ]'
+        full_path = f"{media_root}/{media_name}".replace("[", "{").replace("]", "}")
         return full_path
 
-    def sweep_files(self):
-        logger.info("Chose to sweep as files.")
+    def _get_target(self, start: Path):
+        next_target = start.joinpath(self.torrent.name)
+        if self.conflict == "fail":
+            return file_exists(next_target, None)
+        elif self.conflict == "index":
+            final_target, index = get_dir_for_torrent(self.force_target, self.torrent.name)
+            file_exists(next_target, f"Adding free suffix '.{index}'.")
+            return final_target
+        else:
+            file_exists(next_target, "Will overwrite.")
+            return next_target
+
+    def _sweep_files(self):
+        logger.info(f"CHOSE_METHOD :: manual ({self.action})")
         sweep_type: SweepAction
         if self.torrent.is_temp:
-            logger.info(f"Torrent is temporary dir (prob after extract), so forcing move.")
+            logger.info(f"FORCING move (torrent is temp, after extract)")
             self.action = "move"
         final_target = self.force_target.joinpath(self.torrent.name)
-        logger.info(f"Sweeping with action {self.action} to {final_target}")
         if final_target.exists():
             if self.conflict == "fail":
-                file_exists(f"Target already exists", error=True)
+                file_exists(final_target, None)
             elif self.conflict == "index":
-                final_target = get_dir_for_torrent(self.force_target, self.torrent.name)
-                file_exists(f"Target already exists, falling back to {final_target}", error=False)
+                next_target, index = get_dir_for_torrent(self.force_target, self.torrent.name)
+                file_exists(final_target, f"Adding free suffix {index}.")
+                final_target = next_target
             else:
-                file_exists(f"Target already exists, will overwrite.", error=False)
+                file_exists(final_target, "Will overwrite.")
 
         if self.action == "move":
             move(self.torrent.root, final_target)
@@ -125,9 +141,9 @@ class Sweeper:
         else:
             raise Exception(f"Unknown action {self.action}")
 
-        logger.info("Sweeping successful.")
+        logger.info("SWEEPING succeeded.")
 
-    def get_target_by_group(self):
+    def _get_target_by_group(self):
         if self.force_type == "program":
             return self.library.programs
         elif self.force_type == "game":
@@ -156,7 +172,7 @@ class Sweeper:
         title = title_info[0]
 
         if self.force_type:
-            logger.info(f"FORCING type '{self.force_type}'")
+            logger.info(f"FORCED type '{self.force_type}'")
         else:
             if not content.is_greater(soft_threshold):
                 # This is an error because it shouldn't happen, as it means this is a weird mixed torrent
@@ -170,23 +186,23 @@ class Sweeper:
                 not_enough_info(f"Content matched as Unknown.", error=False)
                 if not title.is_greater(certain_threshold):
                     not_enough_info(f"Content is unknown, Title is below threshold.", error=True)
-                self.assume_torrent(title.type)
+                self._assume_type(title.type, "Title")
             elif content.type == "program":
-                self.assume_torrent("program")
+                self._assume_type("program", "Content")
                 if not title.is_greater(soft_threshold):
                     not_enough_info(
                         f"Title Detector is at {title.chance}, which is low. Assuming default.",
                         error=False
                     )
-                    self.assume_torrent(title.type)
+                    self._assume_type("game", "Default")
                 elif title.type not in ["game", "program"]:
                     detector_mismatch(
                         f"Title Detector detects {title.type}, which is not valid for 'program'. Assuming default.",
                         error=False
                     )
-                    self.assume_torrent("game")
+                    self._assume_type("game", "Default")
                 else:
-                    self.assume_torrent(title.type)
+                    self._assume_type(title.type, "Title")
             else:
                 if content.type != title.type:
                     detector_mismatch(
@@ -194,10 +210,10 @@ class Sweeper:
                         error=False
                     )
                 # This includes: audio, video, text
-                self.assume_torrent(content.type)
+                self._assume_type(content.type, "Content")
 
-        self.force_target = self.force_target or self.get_target_by_group()
+        self.force_target = self.force_target or self._get_target_by_group()
         if self.force_type == "video":
-            self.sweep_filebot()
+            self._sweep_filebot()
         else:
-            self.sweep_files()
+            self._sweep_files()
