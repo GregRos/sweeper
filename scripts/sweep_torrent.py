@@ -31,6 +31,8 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
         return "duplicate"
     raise Exception("Not here")
 
+filebot_format = '{ ~plex.derive{" {tmdb-$id}"}{" {$vf, $vc, $ac}"} }'
+
 
 class Sweeper:
     torrent: Torrent
@@ -89,7 +91,12 @@ class Sweeper:
             format=self._get_filebot_format(),
             conflict=self.conflict,
             action=get_filebot_action(self.action),
-            force_type=self.force_filebot_type
+            force_type=self.force_filebot_type,
+            formats={
+                "movie": self.library.movies.absolute().joinpath(filebot_format),
+                "series": self.library.shows.absolute().joinpath(filebot_format),
+                "anime": self.library.shows.absolute().joinpath(filebot_format)
+            }
         )
 
     def _get_filebot_format(self):

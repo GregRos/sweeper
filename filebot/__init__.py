@@ -93,20 +93,26 @@ class FilebotExecutor:
             format: str,
             conflict: FilebotConflict,
             force_type: FilebotSubtype,
+            formats: dict[str, str]
     ):
+        format_bindings = [f"{k}Format={v}"for k, v in formats.items()]
         self._execute([
-            "-rename",
-            "-r",
+            "-script",
+            "fn:amc",
             root.absolute(),
             "-non-strict",
-            "--format",
-            format.replace("\\", "/"),
-            "--conflict",
-            conflict,
             "--action",
             action,
+            "--conflict",
+            conflict,
             *self._get_db_for_type(force_type),
-            "-no-history"
-
+            "-no-history",
+            "--output",
+            Path(__file__).parent,
+            "--def",
+            "music=n",
+            "subtitles=en",
+            "clean=y",
+            *format_bindings
         ], 60
         )
