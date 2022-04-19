@@ -50,7 +50,7 @@ def raise_bad_input(message: str):
 
 def get_input_dir(var_name: str, var_value: str, can_create=False):
     def raise_err(text: str):
-        raise_bad_input(f"Dir input '{var_name}' is bad, because {text}")
+        raise_bad_input(f"Dir input '{var_name}'='{var_value}' is bad, because {text}")
 
     if not var_value:
         raise_err("it's missing.")
