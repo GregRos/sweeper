@@ -5,4 +5,4 @@ export SWEEPER_LOGS="/var/sweeper/logs"
 export SWEEPER_WORKING_DIR="/tmp/sweeper/working_dir"
 export SWEEPER_LIBRARY="/data/library"
 mkdir -p $SWEEPER_LIBRARY $SWEEPER_LOGS $SWEEPER_WORKING_DIR
-python3.10 $SCRIPT_DIR/main.py $@
+python3.10 $SCRIPT_DIR/run.py $@
