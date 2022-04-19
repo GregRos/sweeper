@@ -8,7 +8,7 @@ from common.torrent import Torrent
 class RegexpExtMatcher:
     def __init__(self, type: str, regexp: str | Pattern):
         self._type = type
-        self._pattern = re.compile(regexp)
+        self._pattern = re.compile(regexp, re.I)
 
     def get_type(self, file: Path):
         return self._type
@@ -67,7 +67,7 @@ class ContentMatcher:
             existing = content_matches[file_type]
             existing.total += size
             if file.suffix:
-                existing.exts.add(file.suffix)
+                existing.exts.add(file.suffix.lower())
             total_size += size
 
         for k, match in content_matches.items():
