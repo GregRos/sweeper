@@ -1,4 +1,5 @@
 #!/bin/bash
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+src="$(realpath "${BASH_SOURCE[0]}")"
+SCRIPT_DIR=$( cd -- "$( dirname -- "$src" )" &> /dev/null && pwd )
 real_script_dir="$(realpath "$SCRIPT_DIR")"
 python3 "$real_script_dir/run.py" $@
