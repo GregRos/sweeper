@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from logging import getLogger
 from os import getenv, access, X_OK
 from pathlib import Path
