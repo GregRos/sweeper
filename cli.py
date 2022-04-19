@@ -92,13 +92,11 @@ def parse_args():
     info = actions.add_parser("info")
     info.add_argument(
         "torrent",
-        type=lambda s: get_input_dir("torrent", s),
         nargs="+"
     )
     sweep = actions.add_parser("sweep", help="sort torrent")
     sweep.add_argument(
         "torrent",
-        type=lambda s: get_input_dir("torrent", s),
         nargs="+"
     )
     sweep.add_argument(
@@ -142,6 +140,7 @@ def parse_args():
     )
 
     parsed_args = root_parser.parse_args()
+    parsed_args.torrent = get_input_dir('torrent', parsed_args.torrent)
     if parsed_args.command == "help":
         root_parser.print_help()
         exit(0)
