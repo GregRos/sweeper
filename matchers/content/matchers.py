@@ -6,9 +6,9 @@ from common.torrent import Torrent
 
 
 class RegexpExtMatcher:
-    def __init__(self, type: str, regexp: str | Pattern):
-        self._type = type
-        if regexp is str:
+    def __init__(self, t: str, regexp: str | Pattern):
+        self._type = t
+        if type(regexp) is str:
             self._pattern = re.compile(regexp, re.I)
         else:
             self._pattern = regexp
