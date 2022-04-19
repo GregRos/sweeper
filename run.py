@@ -17,7 +17,6 @@ logger = getLogger("sweeper")
 
 
 def run(args: SweepArgs | InfoArgs):
-    logger.info(f"INVOKED {print_cmd(sys.argv)}")
     if args.command == "info":
         run_info(args.torrent)
     else:
@@ -56,6 +55,7 @@ def run(args: SweepArgs | InfoArgs):
 
 
 if __name__ == '__main__':
+    logger.info(f"INVOKED {print_cmd(sys.argv)}")
     try:
         run(parse_args())
     except Exception as err:
