@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import sys
-import traceback
 from logging import getLogger
 
 import config
 from cli import parse_args, InfoArgs, SweepArgs
 from extract import Extractor
 from filebot import FilebotExecutor
-from scripts.fail import SweeperError, get_path_env
+from scripts.fail import get_path_env
 from scripts.run_info import run_info
 from scripts.sweep_torrent import Sweeper
 from util import LibraryRoots

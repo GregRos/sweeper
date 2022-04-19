@@ -26,12 +26,13 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
     if action == "copy":
         return "duplicate"
     if action == "hard":
-        return "hardlink"
-    if action == "copy":
         return "duplicate"
+    if action == "move":
+        return "move"
     raise Exception("Not here")
 
-filebot_format = '{ ~plex.derive{" {tmdb-$id}"}{" {$vf, $vc, $ac}"} }'
+
+filebot_format = '{ ~plex.derive{" {tmdb-$id}"}{" [$vf, $vc, $ac]"} }'
 
 
 class Sweeper:
@@ -75,6 +76,9 @@ class Sweeper:
         self.conflict = conflict
 
     def _assume_type(self, type: str, based_on: str):
+        """
+        Assumes the type of the media is {type}. This overwrites force_type and emits a log.
+        """
         self.force_type = type
         log_code = "Assumption"
         logger.info(
@@ -85,10 +89,15 @@ class Sweeper:
         )
 
     def _sweep_filebot(self):
+        """
+        Sweeps by running filebot.
+        """
         logger.info(f"CHOSE_METHOD :: filebot ({self.action})")
+        self.filebot.down_subs(
+            root=self.torrent.root
+        )
         self.filebot.rename(
             root=self.torrent.root,
-            format=self._get_filebot_format(),
             conflict=self.conflict,
             action=get_filebot_action(self.action),
             force_type=self.force_filebot_type,
@@ -97,18 +106,8 @@ class Sweeper:
                 "series": self.library.shows.absolute().joinpath(filebot_format),
                 "anime": self.library.shows.absolute().joinpath(filebot_format)
             }
+
         )
-
-    def _get_filebot_format(self):
-        if self.force_target:
-            media_root = self.force_target.absolute()
-        else:
-            media_root = f'[episode ? "{self.library.shows.absolute()}" : "{self.library.movies.absolute()}"]'
-
-        media_root = media_root
-        media_name = '[ ~plex.derive[" [tmdb-$id}"][" [$vf, $vc, $ac]"] ]'
-        full_path = f"{media_root}/{media_name}".replace("[", "{").replace("]", "}")
-        return full_path
 
     def _get_target(self, start: Path):
         next_target = start.joinpath(self.torrent.name)

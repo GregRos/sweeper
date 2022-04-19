@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
-from typing import List, Iterable, Any, Optional
+from typing import List
 
 from .matchers import RegexpMatcher, TitleMatcher
 

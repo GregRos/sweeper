@@ -7,9 +7,9 @@ from typing import Literal, TypeAlias, IO, Callable
 from common import print_cmd
 from scripts.fail import SweeperError
 
-FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink"]
+FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink", "copy"]
 FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
-FilebotSubtype: TypeAlias = Literal["movie", "episode", "anime"]
+FilebotSubtype: TypeAlias = Literal["movie", "show", "anime"]
 logger = getLogger("sweeper")
 
 
@@ -34,7 +34,7 @@ def read_all(p: Popen, timeout: int):
     r_stderr.start()
     p.wait(timeout)
     if p.returncode > 0:
-        logger.error(f"[FILEBOT] Return code {p.returncode}")
+        raise SweeperError("FilebotError", f"Exited with {p.returncode}")
     else:
         logger.info(f"[FILEBOT] Finished successfuly.")
 
@@ -66,23 +66,23 @@ class FilebotExecutor:
             root.absolute(),
             "-non-strict",
             "--lang",
-            "en"
-            "--output"
+            "en",
+            "--output",
             "srt",
             "--encoding",
             "utf-8"
         ], 20
         )
 
-    def _get_db_for_type(self, type: FilebotSubtype = None):
+    def _get_force_for_type(self, type: FilebotSubtype = None):
         if type is None:
             return []
         if type == "show":
-            return ["--db", "TheMovieDB::TV"]
+            return ["ut_label=series"]
         elif type == "movie":
-            return ["--db", "TheMovieDB"]
+            return ["ut_label=movie"]
         elif type == "anime":
-            return ["--db", "AniDB"]
+            return ["ut_label=anime"]
         else:
             raise SweeperError("BAD_FILEBOT_TYPE", f"Unknown filebot type '{type}'.")
 
@@ -90,12 +90,20 @@ class FilebotExecutor:
             self,
             root: Path,
             action: FilebotAction,
-            format: str,
             conflict: FilebotConflict,
             force_type: FilebotSubtype,
             formats: dict[str, str]
     ):
-        format_bindings = [f"{k}Format={v}"for k, v in formats.items()]
+        """
+        Processes the torrent using filebot.
+        :param root: The torrent root
+        :param action: The action to perform
+        :param conflict: What to do if there is a conflict
+        :param force_type: Forces the media type
+        :param formats: A dictionary of formats, with {"series": "...", "movies": "...", "anime": "..."}
+        :return:
+        """
+        format_bindings = [f"{k}Format={v}" for k, v in formats.items()]
         self._execute([
             "-script",
             "fn:amc",
@@ -105,14 +113,14 @@ class FilebotExecutor:
             action,
             "--conflict",
             conflict,
-            *self._get_db_for_type(force_type),
             "-no-history",
+            # Useless path needed by amc
             "--output",
             Path(__file__).parent,
             "--def",
             "music=n",
             "subtitles=en",
-            "clean=y",
+            *self._get_force_for_type(force_type),
             *format_bindings
         ], 60
         )

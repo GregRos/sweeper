@@ -1,15 +1,12 @@
 import sys
 from logging import getLogger, StreamHandler, Formatter
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 from extract import archive_exts
-from extract.extractor import multipart_archive_pattern, Extractor
-from filebot import FilebotExecutor
+from extract.extractor import multipart_archive_pattern
 from matchers import make_content_matcher
 from matchers import make_title_matcher
 from scripts.fail import get_path_env
-from util import LibraryRoots
 
 title_matcher = make_title_matcher(
     ["game", "video"]

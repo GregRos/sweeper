@@ -1,7 +1,6 @@
 import re
-from collections import defaultdict
 from pathlib import Path
-from typing import List, Iterable, Pattern, AnyStr
+from typing import List, Pattern
 
 from common.torrent import Torrent
 
