@@ -66,7 +66,8 @@ class ContentMatcher:
 
             existing = content_matches[file_type]
             existing.total += size
-            existing.exts.add(file.suffix)
+            if file.suffix:
+                existing.exts.add(file.suffix)
             total_size += size
 
         for k, match in content_matches.items():
