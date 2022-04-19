@@ -5,7 +5,7 @@ from threading import Thread
 from typing import Literal, TypeAlias, IO, Callable
 
 from common import print_cmd
-from scripts.fail import SweeperError
+from common.fail import SweeperError
 
 FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink", "copy"]
 FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
@@ -21,22 +21,22 @@ def read_all(p: Popen, timeout: int):
     r_stdout = Thread(
         target=lambda: read(
             p.stdout,
-            lambda s: logger.info(f"[FILEBOT] OUT :: {s.strip()}")
+            lambda s: logger.info(f"[FILEBOT-{p.pid}] {s.strip()}")
         )
     )
     r_stderr = Thread(
         target=lambda: read(
             p.stderr,
-            lambda s: logger.warning(f"[FILEBOT] ERR :: {s.strip()}")
+            lambda s: logger.warning(f"[FILEBOT-{p.pid}] ERR :: {s.strip()}")
         )
     )
     r_stdout.start()
     r_stderr.start()
     p.wait(timeout)
     if p.returncode > 0:
-        raise SweeperError("FilebotError", f"Exited with {p.returncode}")
+        raise SweeperError("FILEBOT_FAILED", f"Process {p.pid} exited with {p.returncode}")
     else:
-        logger.info(f"[FILEBOT] Finished successfuly.")
+        logger.info(f"[FILEBOT-{p.pid}] DONE")
 
 
 class FilebotExecutor:
@@ -119,7 +119,6 @@ class FilebotExecutor:
             Path(__file__).parent,
             "--def",
             "music=n",
-            "subtitles=en",
             *self._get_force_for_type(force_type),
             *format_bindings
         ], 60

@@ -8,13 +8,13 @@ from common import Torrent
 from extract import Extractor
 from filebot import FilebotExecutor, FilebotAction, FilebotSubtype
 from matchers import TitleMatcher, ContentMatcher
-from scripts.fail import not_enough_info, detector_mismatch, \
+from common.fail import not_enough_info, detector_mismatch, \
     file_exists, raise_bad_input
-from scripts.run_info import to_content_table, to_title_table
+from scripts.info import to_content_table, to_title_table
 from util import get_dir_for_torrent
 
 logger = logging.getLogger("sweeper")
-Conflict: TypeAlias = Literal["overwrite", "index", "fail"]
+Conflict: TypeAlias = Literal["override", "index", "fail"]
 
 SweepAction: TypeAlias = Literal["copy", "hard", "move"]
 soft_threshold = 0.8
@@ -43,7 +43,7 @@ class Sweeper:
     content_matcher: ContentMatcher
     filebot: FilebotExecutor
     extractor: Extractor
-    force_target: Path
+    force_dest: Path
     force_type: str | None
     force_filebot_type: FilebotSubtype
     conflict: Conflict
@@ -57,14 +57,14 @@ class Sweeper:
             content_matcher: ContentMatcher,
             filebot: FilebotExecutor,
             extractor: Extractor,
-            force_target: Path = None,
+            force_dest: Path = None,
             force_type: str = None,
             force_filebot_type: FilebotSubtype = None,
             conflict: Conflict = "fail"
     ):
 
         self.force_type = force_type
-        self.force_target = force_target
+        self.force_dest = force_dest
         self.force_filebot_type = force_filebot_type
         self.extractor = extractor
         self.filebot = filebot
@@ -114,7 +114,7 @@ class Sweeper:
         if self.conflict == "fail":
             return file_exists(next_target, None)
         elif self.conflict == "index":
-            final_target, index = get_dir_for_torrent(self.force_target, self.torrent.name)
+            final_target, index = get_dir_for_torrent(self.force_dest, self.torrent.name)
             file_exists(next_target, f"Adding free suffix '.{index}'.")
             return final_target
         else:
@@ -127,12 +127,12 @@ class Sweeper:
         if self.torrent.is_temp:
             logger.info(f"FORCING move (torrent is temp, after extract)")
             self.action = "move"
-        final_target = self.force_target.joinpath(self.torrent.name)
+        final_target = self.force_dest.joinpath(self.torrent.name)
         if final_target.exists():
             if self.conflict == "fail":
                 file_exists(final_target, None)
             elif self.conflict == "index":
-                next_target, index = get_dir_for_torrent(self.force_target, self.torrent.name)
+                next_target, index = get_dir_for_torrent(self.force_dest, self.torrent.name)
                 file_exists(final_target, f"Adding free suffix {index}.")
                 final_target = next_target
             else:
@@ -218,7 +218,7 @@ class Sweeper:
                 # This includes: audio, video, text
                 self._assume_type(content.type, "Content")
 
-        self.force_target = self.force_target or self._get_target_by_group()
+        self.force_dest = self.force_dest or self._get_target_by_group()
         if self.force_type == "video":
             self._sweep_filebot()
         else:

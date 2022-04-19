@@ -1,5 +1,4 @@
 import argparse
-import json
 import sys
 from logging import getLogger
 from pathlib import Path
@@ -7,8 +6,8 @@ from typing import Literal, Optional
 
 from common import Torrent, print_cmd
 from filebot import FilebotSubtype
-from scripts.fail import get_input_dir
-from scripts.sweep_torrent import SweepAction
+from common.fail import get_input_dir
+from scripts.sweeper import SweepAction
 
 
 class BaseArgs:
@@ -23,15 +22,16 @@ class InfoArgs(BaseArgs):
 
 class SweepArgs(BaseArgs):
     command: Literal["sweep"]
-    conflict: Literal["indexs", "fail", "overwrite"]
+    conflict: Literal["indexs", "fail", "override"]
     action: SweepAction
     torrent: Torrent
     force_type: Optional[Path]
-    force_target: Optional[Path]
+    force_dest: Optional[Path]
     force_filebot_subtype: FilebotSubtype
 
 
 logger = getLogger("sweeper")
+
 
 def parse_force_type(force_type: str):
     if force_type:
@@ -42,6 +42,7 @@ def parse_force_type(force_type: str):
             return [force_type, None]
     else:
         return [None, None]
+
 
 def parse_args():
     logger.info(f"INVOKED {print_cmd(sys.argv)}")
@@ -70,7 +71,7 @@ def parse_args():
         choices=[
             "index",
             "fail",
-            "overwrite"
+            "override"
         ]
     )
     sweep.add_argument(
@@ -90,11 +91,11 @@ def parse_args():
     )
 
     sweep.add_argument(
-        "--force_target",
-        help="Force sweep location",
+        "--force_dest",
+        help="Force sweep to specific folder (used as subtype root)",
         required=False,
         default=None,
-        type=lambda s: get_input_dir("force_target", s)
+        type=lambda s: get_input_dir("force_dest", s)
     )
     sweep.add_argument("--action", help="sorting action", default="copy", choices=[
         "move",
@@ -115,7 +116,7 @@ def parse_args():
             command="sweep",
             torrent=Torrent(parsed_args.torrent),
             action=parsed_args.action,
-            force_target=parsed_args.force_target,
+            force_dest=parsed_args.force_dest,
             force_type=force_type,
             conflict=parsed_args.conflict,
             force_filebot_subtype=force_subtype

@@ -6,9 +6,9 @@ import config
 from cli import parse_args, InfoArgs, SweepArgs
 from extract import Extractor
 from filebot import FilebotExecutor
-from scripts.fail import get_path_env
-from scripts.run_info import run_info
-from scripts.sweep_torrent import Sweeper
+from common.fail import get_path_env, SweeperError
+from scripts.info import run_info
+from scripts.sweeper import Sweeper
 from util import LibraryRoots
 
 logger = getLogger("sweeper")
@@ -44,7 +44,7 @@ def run(args: SweepArgs | InfoArgs):
             torrent=args.torrent,
             extractor=extractor,
             force_type=args.force_type,
-            force_target=args.force_target,
+            force_dest=args.force_dest,
             title_matcher=config.title_matcher,
             content_matcher=config.content_matcher,
             conflict=args.conflict,
@@ -57,7 +57,8 @@ if __name__ == '__main__':
         run(parse_args())
     except Exception as err:
         logger.fatal(
-            "Failed!",
+            f"EXCEPTION {' '.join(err.args)}",
             exc_info=err
         )
-        exit(2)
+
+

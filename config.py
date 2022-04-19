@@ -6,7 +6,7 @@ from extract import archive_exts
 from extract.extractor import multipart_archive_pattern
 from matchers import make_content_matcher
 from matchers import make_title_matcher
-from scripts.fail import get_path_env
+from common.fail import get_path_env
 
 title_matcher = make_title_matcher(
     ["game", "video"]
@@ -239,7 +239,7 @@ title_matcher = make_title_matcher(
 ]
 ).add_subgroup(
     "EbookFormat", 93, [
-        "EPIB",
+        "EPUB",
         "MOBI",
         "PDF",
     ]
@@ -360,7 +360,9 @@ content_matcher = make_content_matcher(
     "archive"
 ).add_exts(
     *archive_exts
-).add_pattern(multipart_archive_pattern).finish()
+).add_pattern(
+    multipart_archive_pattern
+).finish()
 
 logger = getLogger("sweeper")
 logger.addHandler(

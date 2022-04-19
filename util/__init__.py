@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import List, Any
+from typing import List
 
-from scripts.fail import SweeperError, raise_bad_input, raise_bad_env
+from common.fail import raise_bad_env
 
 
 def format_filesize(num, suffix="B"):
@@ -63,11 +63,6 @@ class Tablizer:
 
 def format_float(x: float):
     return "{:.2f}".format(x)
-
-
-def uproot_path(target: Path, old_root: Path, new_root: Path):
-    rel = target.relative_to(old_root)
-    return new_root.joinpath(rel)
 
 
 class LibraryRoots(object):
