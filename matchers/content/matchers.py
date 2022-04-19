@@ -8,7 +8,10 @@ from common.torrent import Torrent
 class RegexpExtMatcher:
     def __init__(self, type: str, regexp: str | Pattern):
         self._type = type
-        self._pattern = re.compile(regexp, re.I)
+        if regexp is str:
+            self._pattern = re.compile(regexp, re.I)
+        else:
+            self._pattern = regexp
 
     def get_type(self, file: Path):
         return self._type

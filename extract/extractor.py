@@ -18,7 +18,7 @@ archive_exts = [
 
 multipart_rar = re.compile(r"\.part(\d+)")
 logger = logging.getLogger("sweeper")
-multipart_archive_pattern = re.compile(r"\.(z\d\d\d|\d\d\d)")
+multipart_archive_pattern = re.compile(r"\.(z\d\d\d|\d\d\d)", re.I)
 
 
 def get_rar_part(file: Path) -> int | None:
