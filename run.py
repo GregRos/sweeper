@@ -4,6 +4,7 @@ from logging import getLogger
 
 import config
 from cli import parse_args, InfoArgs, SweepArgs
+from common import print_cmd
 from extract import Extractor
 from filebot import FilebotExecutor
 from common.fail import get_path_env, SweeperError
@@ -15,6 +16,7 @@ logger = getLogger("sweeper")
 
 
 def run(args: SweepArgs | InfoArgs):
+    logger.info(f"INVOKED {print_cmd(sys.argv)}")
     if args.command == "info":
         run_info(args.torrent)
     else:

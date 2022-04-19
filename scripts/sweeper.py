@@ -36,7 +36,7 @@ filebot_format = '{ ~plex.derive{" {tmdb-$id}"}{" [$vf, $vc, $ac]"} }'
 
 
 class Sweeper:
-    torrent: Torrent
+    _torrent: Torrent
     action: SweepAction
     library: Any
     title_matcher: TitleMatcher
@@ -72,7 +72,7 @@ class Sweeper:
         self.title_matcher = title_matcher
         self.library = library
         self.action = action
-        self.torrent = torrent
+        self._torrent = torrent
         self.conflict = conflict
 
     def _assume_type(self, type: str, based_on: str):
@@ -94,10 +94,10 @@ class Sweeper:
         """
         logger.info(f"CHOSE_METHOD :: filebot ({self.action})")
         self.filebot.down_subs(
-            root=self.torrent.root
+            root=self._torrent.root
         )
         self.filebot.rename(
-            root=self.torrent.root,
+            root=self._torrent.root,
             conflict=self.conflict,
             action=get_filebot_action(self.action),
             force_type=self.force_filebot_type,
@@ -110,11 +110,11 @@ class Sweeper:
         )
 
     def _get_target(self, start: Path):
-        next_target = start.joinpath(self.torrent.name)
+        next_target = start.joinpath(self._torrent.name)
         if self.conflict == "fail":
             return file_exists(next_target, None)
         elif self.conflict == "index":
-            final_target, index = get_dir_for_torrent(self.force_dest, self.torrent.name)
+            final_target, index = get_dir_for_torrent(self.force_dest, self._torrent.name)
             file_exists(next_target, f"Adding free suffix '.{index}'.")
             return final_target
         else:
@@ -124,26 +124,26 @@ class Sweeper:
     def _sweep_files(self):
         logger.info(f"CHOSE_METHOD :: manual ({self.action})")
         sweep_type: SweepAction
-        if self.torrent.is_temp:
+        if self._torrent.is_temp:
             logger.info(f"FORCING move (torrent is temp, after extract)")
             self.action = "move"
-        final_target = self.force_dest.joinpath(self.torrent.name)
+        final_target = self.force_dest.joinpath(self._torrent.name)
         if final_target.exists():
             if self.conflict == "fail":
                 file_exists(final_target, None)
             elif self.conflict == "index":
-                next_target, index = get_dir_for_torrent(self.force_dest, self.torrent.name)
+                next_target, index = get_dir_for_torrent(self.force_dest, self._torrent.name)
                 file_exists(final_target, f"Adding free suffix {index}.")
                 final_target = next_target
             else:
                 file_exists(final_target, "Will overwrite.")
 
         if self.action == "move":
-            move(self.torrent.root, final_target)
+            move(self._torrent.root, final_target)
         elif self.action == "copy":
-            copytree(self.torrent.root, final_target)
+            copytree(self._torrent.root, final_target)
         elif self.action == "hard":
-            copytree(self.torrent.root, final_target, copy_function=link)
+            copytree(self._torrent.root, final_target, copy_function=link)
         else:
             raise Exception(f"Unknown action {self.action}")
 
@@ -164,14 +164,14 @@ class Sweeper:
             raise NotImplementedError()
 
     def run_sweep(self):
-        content_info = self.content_matcher.match(self.torrent)
-        logger.info(f"SWEEPING {self.torrent.name}")
+        content_info = self.content_matcher.match(self._torrent)
+        logger.info(f"SWEEPING {self._torrent.name}")
         content = content_info[0]
         if content.one_of("archive"):
             logger.info(f"Archive extensions found: {', '.join(content.exts)}")
-            self.torrent = self.extractor.extract(self.torrent)
-            content_info = self.content_matcher.match(self.torrent)
-        title_info = self.title_matcher.match(self.torrent)
+            self._torrent = self.extractor.extract(self._torrent)
+            content_info = self.content_matcher.match(self._torrent)
+        title_info = self.title_matcher.match(self._torrent)
         logger.info(to_content_table(content_info))
         logger.info(to_title_table(title_info))
         content = content_info[0]

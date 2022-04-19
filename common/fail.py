@@ -73,12 +73,9 @@ def get_path_env(var_name: str, is_dir: bool = None, can_create: bool = False, c
     def raise_err(rest: str):
         raise_bad_env(f"Env variable '{var_name}' is bad: {rest}")
 
-    if not var_name:
-        return default or raise_err("it's undefined.")
-
     value = getenv(var_name)
     if value is None:
-        raise_err("it's empty.")
+        return default or raise_err("it's empty.")
 
     p = Path(value)
 

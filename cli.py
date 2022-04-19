@@ -2,7 +2,7 @@ import argparse
 import sys
 from logging import getLogger
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, IO
 
 from common import Torrent, print_cmd
 from filebot import FilebotSubtype
@@ -44,45 +44,79 @@ def parse_force_type(force_type: str):
         return [None, None]
 
 
-def parse_args():
-    logger.info(f"INVOKED {print_cmd(sys.argv)}")
+def format_usage():
+    options_block = {
+        "--action=copy": "Copy media files.",
+        "--action=move": "Move media files.",
+        "--action=hard": "Hardlink media files.",
+        "--force_dest=<path>": "Force the destination dir. No auto-select.",
+        "--force_type=<type>": """
+Force media type: text, audio, program, game, video, video/{movie,show,anime}
+            """.strip(),
+        "--conflict=overwrite": "If dest exists, overwrite.",
+        "--conflict=index": "If dest exists, create new dir with postfix, e.g. /data/movies/your_movie.5",
+        "--conflict=fail": "If dest exists, fail."
+    }
+    formatted = "\n".join([
+        f"{k.ljust(30).rjust(34)}{v}" for k, v in options_block.items()
+    ])
+    return f"""
+Sorts torrents and renames media to work with streaming servers.
 
-    root_parser = argparse.ArgumentParser(
-        description='Torrent sorting script. Can delegate for FileBot'
+Supports: games, movies, shows, anime, ebooks, programs 
+Usage:
+    sweeper info <torrent_path>
+    sweeper sweep <torrent_path> [options]
+    sweeper --help | -h | help
+
+Options:
+{formatted}
+    """.lstrip()
+
+
+class CustomizedArgumentParser(argparse.ArgumentParser):
+    help_override: str
+
+    def format_help(self):
+        return self.help_override
+
+
+def parse_args():
+    root_parser = CustomizedArgumentParser(
+        add_help=True
     )
+    root_parser.help_override = format_usage()
 
     actions = root_parser.add_subparsers(title='actions', required=True, dest='command')
-    info = actions.add_parser("info", help="classify torrent type")
+    actions.add_parser("help")
+    info = actions.add_parser("info")
     info.add_argument(
         "torrent",
-        help="path to the torrent's folder",
         type=lambda s: get_input_dir("torrent", s)
     )
     sweep = actions.add_parser("sweep", help="sort torrent")
     sweep.add_argument(
         "torrent",
-        help="root folder containing the torrent",
         type=lambda s: get_input_dir("torrent", s)
     )
     sweep.add_argument(
         "--conflict",
-        help="What to do in case dest already exists.",
         type=str,
         choices=[
             "index",
             "fail",
             "override"
-        ]
+        ],
+        default="fail"
     )
     sweep.add_argument(
         "--force_type",
-        help="Turn off auto-detect and sweep as a specific content type.",
-        required=False,
         default=None,
         choices=[
             "video",
             "video/show",
             "video/movie",
+            "video/anime",
             "audio",
             "text",
             "program",
@@ -92,26 +126,30 @@ def parse_args():
 
     sweep.add_argument(
         "--force_dest",
-        help="Force sweep to specific folder (used as subtype root)",
-        required=False,
         default=None,
         type=lambda s: get_input_dir("force_dest", s)
     )
-    sweep.add_argument("--action", help="sorting action", default="copy", choices=[
-        "move",
-        "copy",
-        "hard"
-    ]
-                       )
+    sweep.add_argument(
+        "--action",
+        default="copy",
+        choices=[
+            "move",
+            "copy",
+            "hard"
+        ]
+    )
+
     parsed_args = root_parser.parse_args()
-    if parsed_args.command == "info":
+    if parsed_args.command == "help":
+        root_parser.print_help()
+        exit(0)
+    elif parsed_args.command == "info":
         return InfoArgs(
             command="info",
             torrent=Torrent(parsed_args.torrent)
         )
     else:
         force_type, force_subtype = parse_force_type(parsed_args.force_type)
-
         return SweepArgs(
             command="sweep",
             torrent=Torrent(parsed_args.torrent),

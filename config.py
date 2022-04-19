@@ -1,6 +1,7 @@
 import sys
 from logging import getLogger, StreamHandler, Formatter
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from extract import archive_exts
 from extract.extractor import multipart_archive_pattern
@@ -370,7 +371,8 @@ logger.addHandler(
         filename=get_path_env(
             "SWEEPER_LOGS",
             is_dir=True,
-            can_create=True
+            can_create=True,
+            default=Path(__file__).parent
         ).joinpath("sweeper.log"),
         # 10 MB in size
         maxBytes=10 ** 7,
