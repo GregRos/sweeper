@@ -55,6 +55,9 @@ def get_input_dir(var_name: str, var_value: str, can_create=False):
     if not var_value:
         raise_err("it's missing.")
 
+    if type(var_value) is list:
+        var_value = " ".join(var_value)
+
     p = Path(var_value)
     if not p.exists():
         if can_create:

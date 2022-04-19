@@ -92,12 +92,14 @@ def parse_args():
     info = actions.add_parser("info")
     info.add_argument(
         "torrent",
-        type=lambda s: get_input_dir("torrent", s)
+        type=lambda s: get_input_dir("torrent", s),
+        nargs="+"
     )
     sweep = actions.add_parser("sweep", help="sort torrent")
     sweep.add_argument(
         "torrent",
-        type=lambda s: get_input_dir("torrent", s)
+        type=lambda s: get_input_dir("torrent", s),
+        nargs="+"
     )
     sweep.add_argument(
         "--conflict",
