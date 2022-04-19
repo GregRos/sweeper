@@ -55,7 +55,7 @@ class FilebotExecutor:
             stdout=PIPE,
             stderr=PIPE,
             shell=False,
-            encoding="ascii"
+            encoding="utf-8"
         )
         logger.info(f"Spawned process at {p.pid}.")
         read_all(p, timeout)
