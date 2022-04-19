@@ -35,8 +35,7 @@ def read_all(p: Popen, timeout: int):
     p.wait(timeout)
     if p.returncode > 0:
         raise SweeperError("FILEBOT_FAILED", f"Process {p.pid} exited with {p.returncode}")
-    else:
-        logger.info(f"[FILEBOT-{p.pid}] DONE")
+
 
 
 class FilebotExecutor:

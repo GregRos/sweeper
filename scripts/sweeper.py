@@ -24,7 +24,7 @@ certain_threshold = 0.93
 
 def get_filebot_action(action: SweepAction) -> FilebotAction:
     if action == "copy":
-        return "duplicate"
+        return "copy"
     if action == "hard":
         return "duplicate"
     if action == "move":
@@ -37,16 +37,16 @@ filebot_format = '{ ~plex.derive{" {tmdb-$id}"}{" [$vf, $vc, $ac]"} }'
 
 class Sweeper:
     _torrent: Torrent
-    action: SweepAction
-    library: Any
-    title_matcher: TitleMatcher
-    content_matcher: ContentMatcher
-    filebot: FilebotExecutor
-    extractor: Extractor
-    force_dest: Path
-    force_type: str | None
-    force_filebot_type: FilebotSubtype
-    conflict: Conflict
+    _action: SweepAction
+    _library: Any
+    _title_matcher: TitleMatcher
+    _content_matcher: ContentMatcher
+    _filebot: FilebotExecutor
+    _extractor: Extractor
+    _dest: Path
+    _type: str | None
+    _filebot_type: FilebotSubtype
+    _conflict: Conflict
 
     def __init__(
             self,
@@ -63,23 +63,23 @@ class Sweeper:
             conflict: Conflict = "fail"
     ):
 
-        self.force_type = force_type
-        self.force_dest = force_dest
-        self.force_filebot_type = force_filebot_type
-        self.extractor = extractor
-        self.filebot = filebot
-        self.content_matcher = content_matcher
-        self.title_matcher = title_matcher
-        self.library = library
-        self.action = action
+        self._type = force_type
+        self._dest = force_dest
+        self._filebot_type = force_filebot_type
+        self._extractor = extractor
+        self._filebot = filebot
+        self._content_matcher = content_matcher
+        self._title_matcher = title_matcher
+        self._library = library
+        self._action = action
         self._torrent = torrent
-        self.conflict = conflict
+        self._conflict = conflict
 
     def _assume_type(self, type: str, based_on: str):
         """
         Assumes the type of the media is {type}. This overwrites force_type and emits a log.
         """
-        self.force_type = type
+        self._type = type
         log_code = "Assumption"
         logger.info(
             f"ASSUMING torrent is of type '{type}' ({based_on})",
@@ -92,29 +92,29 @@ class Sweeper:
         """
         Sweeps by running filebot.
         """
-        logger.info(f"CHOSE_METHOD :: filebot ({self.action})")
-        self.filebot.down_subs(
+        logger.info(f"CHOSE_METHOD :: filebot ({self._action})")
+        self._filebot.down_subs(
             root=self._torrent.root
         )
-        self.filebot.rename(
+        self._filebot.rename(
             root=self._torrent.root,
-            conflict=self.conflict,
-            action=get_filebot_action(self.action),
-            force_type=self.force_filebot_type,
+            conflict=self._conflict,
+            action=get_filebot_action(self._action),
+            force_type=self._filebot_type,
             formats={
-                "movie": self.library.movies.absolute().joinpath(filebot_format),
-                "series": self.library.shows.absolute().joinpath(filebot_format),
-                "anime": self.library.shows.absolute().joinpath(filebot_format)
+                "movie": self._library.movies.absolute().joinpath(filebot_format),
+                "series": self._library.shows.absolute().joinpath(filebot_format),
+                "anime": self._library.shows.absolute().joinpath(filebot_format)
             }
 
         )
 
     def _get_target(self, start: Path):
         next_target = start.joinpath(self._torrent.name)
-        if self.conflict == "fail":
+        if self._conflict == "fail":
             return file_exists(next_target, None)
-        elif self.conflict == "index":
-            final_target, index = get_dir_for_torrent(self.force_dest, self._torrent.name)
+        elif self._conflict == "index":
+            final_target, index = get_dir_for_torrent(self._dest, self._torrent.name)
             file_exists(next_target, f"Adding free suffix '.{index}'.")
             return final_target
         else:
@@ -122,63 +122,63 @@ class Sweeper:
             return next_target
 
     def _sweep_files(self):
-        logger.info(f"CHOSE_METHOD :: manual ({self.action})")
+        logger.info(f"CHOSE_METHOD :: manual ({self._action})")
         sweep_type: SweepAction
         if self._torrent.is_temp:
             logger.info(f"FORCING move (torrent is temp, after extract)")
-            self.action = "move"
-        final_target = self.force_dest.joinpath(self._torrent.name)
+            self._action = "move"
+        final_target = self._dest.joinpath(self._torrent.name)
         if final_target.exists():
-            if self.conflict == "fail":
+            if self._conflict == "fail":
                 file_exists(final_target, None)
-            elif self.conflict == "index":
-                next_target, index = get_dir_for_torrent(self.force_dest, self._torrent.name)
+            elif self._conflict == "index":
+                next_target, index = get_dir_for_torrent(self._dest, self._torrent.name)
                 file_exists(final_target, f"Adding free suffix {index}.")
                 final_target = next_target
             else:
                 file_exists(final_target, "Will overwrite.")
 
-        if self.action == "move":
+        if self._action == "move":
             move(self._torrent.root, final_target)
-        elif self.action == "copy":
+        elif self._action == "copy":
             copytree(self._torrent.root, final_target)
-        elif self.action == "hard":
+        elif self._action == "hard":
             copytree(self._torrent.root, final_target, copy_function=link)
         else:
-            raise Exception(f"Unknown action {self.action}")
+            raise Exception(f"Unknown action {self._action}")
 
         logger.info("SWEEPING succeeded.")
 
     def _get_target_by_group(self):
-        if self.force_type == "program":
-            return self.library.programs
-        elif self.force_type == "game":
-            return self.library.games
-        elif self.force_type == "audio":
-            return self.library.audio
-        elif self.force_type == "text":
-            return self.library.ebooks
-        elif self.force_type == "video":
+        if self._type == "program":
+            return self._library.programs
+        elif self._type == "game":
+            return self._library.games
+        elif self._type == "audio":
+            return self._library.audio
+        elif self._type == "text":
+            return self._library.ebooks
+        elif self._type == "video":
             return None
-        elif self.force_type == "image":
+        elif self._type == "image":
             raise NotImplementedError()
 
     def run_sweep(self):
-        content_info = self.content_matcher.match(self._torrent)
+        content_info = self._content_matcher.match(self._torrent)
         logger.info(f"SWEEPING {self._torrent.name}")
         content = content_info[0]
         if content.one_of("archive"):
             logger.info(f"Archive extensions found: {', '.join(content.exts)}")
-            self._torrent = self.extractor.extract(self._torrent)
-            content_info = self.content_matcher.match(self._torrent)
-        title_info = self.title_matcher.match(self._torrent)
+            self._torrent = self._extractor.extract(self._torrent)
+            content_info = self._content_matcher.match(self._torrent)
+        title_info = self._title_matcher.match(self._torrent)
         logger.info(to_content_table(content_info))
         logger.info(to_title_table(title_info))
         content = content_info[0]
         title = title_info[0]
 
-        if self.force_type:
-            logger.info(f"FORCED type '{self.force_type}'")
+        if self._type:
+            logger.info(f"FORCED type '{self._type}'")
         else:
             if not content.is_greater(soft_threshold):
                 # This is an error because it shouldn't happen, as it means this is a weird mixed torrent
@@ -218,8 +218,8 @@ class Sweeper:
                 # This includes: audio, video, text
                 self._assume_type(content.type, "Content")
 
-        self.force_dest = self.force_dest or self._get_target_by_group()
-        if self.force_type == "video":
+        self._dest = self._dest or self._get_target_by_group()
+        if self._type == "video":
             self._sweep_filebot()
         else:
             self._sweep_files()
