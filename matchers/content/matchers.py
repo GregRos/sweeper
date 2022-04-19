@@ -18,7 +18,7 @@ class RegexpExtMatcher:
 
 
 class ContentMatch:
-    def __init__(self, type: str, ratio: float, total: int, exts: List[str]):
+    def __init__(self, type: str, ratio: float, total: int, exts: set[str]):
         self.ratio = ratio
         self.type = type
         self.total = total
@@ -61,12 +61,12 @@ class ContentMatcher:
                     type=file_type,
                     ratio=0,
                     total=0,
-                    exts=[]
+                    exts=set()
                 )
 
             existing = content_matches[file_type]
             existing.total += size
-            existing.exts.append(file.suffix)
+            existing.exts.add(file.suffix)
             total_size += size
 
         for k, match in content_matches.items():

@@ -41,11 +41,11 @@ class TitleMatcher:
 
     def match(self, torrent: Torrent) -> List[TitleMatch]:
         all_events = defaultdict(list)
-        all_matched_by_type = defaultdict(list)
+        all_matched_by_type = defaultdict(set)
         for m in self._matchers:
             result = m.apply(torrent)
             if result:
-                all_matched_by_type[m.type].append(m.meta_name)
+                all_matched_by_type[m.type].add(m.meta_name)
                 all_events[m.type].append(result)
 
         # The following calculation is wrong because it assumes detections are independent
@@ -59,7 +59,7 @@ class TitleMatcher:
         # This is based on real math but isn't right.
         chance_none = prod([1 - P for k, P in all_positive_events.items()])
         final_chance_by_group = [
-            TitleMatch(t, chance_none / (1 - P), all_matched_by_type[t]) for t, P in
+            TitleMatch(t, chance_none / (1 - P), list(all_matched_by_type[t])) for t, P in
             all_positive_events.items()
         ]
         unknown_chance = TitleMatch("Unknown", chance_none, [])

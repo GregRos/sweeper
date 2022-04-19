@@ -40,9 +40,9 @@ title_matcher = make_title_matcher(
     50, [
         # It's low because the last pattern will match the previous one,
         # So actually it's very high sensitivity
-        r"v\d+\.\d+",
-        r"v\d+\.\d+\.\d+",
-        r"v\d+\.\d+\.\d+\.\d+"
+        r"v\d+\.\d+\w*",
+        r"v\d+\.\d+\.\d+\w*",
+        r"v\d+\.\d+\.\d+\.\d+\w*"
     ]
 ).add_subgroup(
     "IsoFile",
