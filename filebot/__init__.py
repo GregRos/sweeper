@@ -108,6 +108,7 @@ class FilebotExecutor:
             "fn:amc",
             root.absolute(),
             "-non-strict",
+            "-get-subtitles",
             "--action",
             action,
             "--conflict",

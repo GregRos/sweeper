@@ -57,7 +57,7 @@ class Extractor:
         target_dir = get_dir_for_torrent(self.working_dir, torrent.name)
         target_dir.mkdir(exist_ok=True)
         archives = []
-        for file in torrent.root.glob("**/*", ):
+        for file in torrent.get_all():
             retargeted_path = target_dir.joinpath(file)
             if file.is_dir():
                 retargeted_path.mkdir(exist_ok=True)

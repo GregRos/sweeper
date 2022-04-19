@@ -54,7 +54,7 @@ class ContentMatcher:
     def match(self, torrent: Torrent) -> List[ContentMatch]:
         total_size = 0
         content_matches: dict[str, ContentMatch] = {}
-        for file in torrent.root.glob("**/*"):
+        for file in torrent.get_all():
             if file.is_dir():
                 continue
             file_type = self._classify_file(file)

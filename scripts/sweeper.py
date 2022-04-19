@@ -93,9 +93,13 @@ class Sweeper:
         Sweeps by running filebot.
         """
         logger.info(f"CHOSE_METHOD :: filebot ({self._action})")
-        self._filebot.down_subs(
-            root=self._torrent.root
-        )
+        try:
+            self._filebot.down_subs(
+                root=self._torrent.root
+            )
+        except Exception as err:
+            logger.error("Failed to get subs.", exc_info=err)
+
         self._filebot.rename(
             root=self._torrent.root,
             conflict=self._conflict,
@@ -106,8 +110,8 @@ class Sweeper:
                 "series": self._library.shows.absolute().joinpath(filebot_format),
                 "anime": self._library.shows.absolute().joinpath(filebot_format)
             }
-
         )
+
 
     def _get_target(self, start: Path):
         next_target = start.joinpath(self._torrent.name)
