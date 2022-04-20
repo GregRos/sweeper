@@ -72,7 +72,7 @@ class FilebotExecutor:
             "srt",
             "--encoding",
             "utf-8"
-        ], 20
+        ], 60
         )
 
     def _get_force_for_type(self, type: FilebotSubtype = None):
@@ -123,5 +123,4 @@ class FilebotExecutor:
             "music=n",
             *self._get_force_for_type(force_type),
             *format_bindings
-        ], 60
-        )
+        ], 60 * 60)

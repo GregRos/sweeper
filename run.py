@@ -36,7 +36,8 @@ def run(args: SweepArgs | InfoArgs):
                 "shows",
                 "programs",
                 "games",
-                "ebooks"
+                "ebooks",
+                "anime"
             ]
         )
         Sweeper(
