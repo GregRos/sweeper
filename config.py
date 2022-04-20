@@ -20,7 +20,14 @@ title_matcher = make_title_matcher(
         "alpha",
         "Preload",
         "Repack",
-        r"multi\d*",
+        r"multi\d*"
+    ]
+).add_subgroup(
+    "CommonGameMovieKeywords",
+    70, [
+        "Director",
+        "Directors",
+        "Cut"
     ]
 ).next_group(
     ["game", "program"]
