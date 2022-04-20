@@ -110,7 +110,7 @@ class Sweeper:
             formats={
                 "movie": self._library.movies.absolute().joinpath(filebot_format),
                 "series": self._library.shows.absolute().joinpath(filebot_format),
-                "anime": self._library.shows.absolute().joinpath(filebot_format)
+                "anime": self._library.anime.absolute().joinpath(filebot_format)
             }
         )
 
