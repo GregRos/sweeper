@@ -114,7 +114,6 @@ class Sweeper:
             }
         )
 
-
     def _get_target(self, start: Path):
         next_target = start.joinpath(self._torrent.name)
         if self._conflict == "fail":

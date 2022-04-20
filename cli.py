@@ -118,6 +118,7 @@ def parse_args():
     sweep.add_argument(
         "--force-type",
         default=None,
+        dest="force_type",
         choices=[
             "video",
             "video/show",
@@ -133,6 +134,7 @@ def parse_args():
     sweep.add_argument(
         "--force-dest",
         default=None,
+        dest="force_dest",
         type=lambda s: get_input_dir("force-dest", s)
     )
     sweep.add_argument(
