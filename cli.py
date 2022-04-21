@@ -16,23 +16,21 @@ class BaseArgs:
 
 
 class InfoArgs(BaseArgs):
-    command: Literal["info"]
     torrent: Torrent
 
 
 class SubsArgs(BaseArgs):
-    command: Literal["getsubs"]
     torrent: Torrent
 
 
 class SweepArgs(BaseArgs):
-    command: Literal["sweep"]
     conflict: Literal["index", "fail", "override"]
     action: SweepAction
     torrent: Torrent
     force_type: Optional[Path]
     force_dest: Optional[Path]
     force_filebot_subtype: FilebotSubtype
+    no_subs: bool
 
 
 logger = getLogger("sweeper")
@@ -61,6 +59,8 @@ Force media type: text, audio, program, game, video, video/{movie,show,anime}
         "--conflict=fail": "If dest exists, fail. (default)",
         "--conflict=override": "If dest exists, overwrite.",
         "--conflict=index": "If dest exists, use dest.$N",
+        "--conflict=skip": "If dest exists, skip.",
+        "--no-subs": "Don't download subs."
     }
     formatted = "\n".join([
         f"{k.ljust(30).rjust(34)}{v}" for k, v in options_block.items()
@@ -106,7 +106,8 @@ def parse_args():
         "torrent",
         nargs="+"
     )
-    actions.add_parser("getsubs", help="gets subs")
+    getsubs = actions.add_parser("getsubs", help="gets subs")
+    getsubs.add_argument("torrent", nargs="+")
     sweep = actions.add_parser("sweep", help="sort torrent")
     sweep.add_argument(
         "torrent",
@@ -136,6 +137,13 @@ def parse_args():
             "program",
             "game"
         ]
+    )
+
+    sweep.add_argument(
+        "--no-subs",
+        default=False,
+        dest="no_subs",
+        action='store_true'
     )
 
     sweep.add_argument(
@@ -170,11 +178,12 @@ def parse_args():
             force_dest=parsed_args.force_dest,
             force_type=force_type,
             conflict=parsed_args.conflict,
-            force_filebot_subtype=force_subtype
+            force_filebot_subtype=force_subtype,
+            no_subs=parsed_args.no_subs
         )
     elif parsed_args.command == "getsubs":
         return SubsArgs(
-            torrent=Torrent()
+            torrent=Torrent(parsed_args.torrent)
 
         )
     else:

@@ -4,7 +4,7 @@ import sys
 from logging import getLogger
 
 import config
-from cli import parse_args, InfoArgs, SweepArgs
+from cli import parse_args, InfoArgs, SweepArgs, SubsArgs
 from common import print_cmd
 from extract import Extractor
 from filebot import FilebotExecutor
@@ -17,9 +17,15 @@ logger = getLogger("sweeper")
 
 
 def run(args: SweepArgs | InfoArgs):
-    if args.command == "info":
+    if type(args) is InfoArgs:
         run_info(args.torrent)
-    else:
+    elif type(args) is SubsArgs:
+        filebot_runner = FilebotExecutor(
+            exe=get_path_env("SWEEPER_FILEBOT", is_dir=False, check_exe=True)
+        )
+        filebot_runner.down_subs(args.torrent.root)
+        pass
+    elif type(args) is SweepArgs:
         filebot_runner = FilebotExecutor(
             exe=get_path_env("SWEEPER_FILEBOT", is_dir=False, check_exe=True)
         )
@@ -51,7 +57,8 @@ def run(args: SweepArgs | InfoArgs):
             title_matcher=config.title_matcher,
             content_matcher=config.content_matcher,
             conflict=args.conflict,
-            force_filebot_type=args.force_filebot_subtype
+            force_filebot_type=args.force_filebot_subtype,
+            no_subs=args.no_subs
         ).run_sweep()
 
 

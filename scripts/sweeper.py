@@ -34,7 +34,7 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
     raise Exception("Not here")
 
 
-filebot_format = '{ ~plex.derive{" {tmdb-$id}"}{" [$vf, $vc, $ac]"} }'
+filebot_format = '{ ~plex ** " [tmdbid-$id]" % " - [$vf, $vc, $bitrate, $ac]" }'
 
 
 class Sweeper:
@@ -49,7 +49,7 @@ class Sweeper:
     _type: str | None
     _filebot_type: FilebotSubtype
     _conflict: Conflict
-
+    _no_subs: bool
     def __init__(
             self,
             torrent: Torrent,
@@ -62,7 +62,8 @@ class Sweeper:
             force_dest: Path = None,
             force_type: str = None,
             force_filebot_type: FilebotSubtype = None,
-            conflict: Conflict = "fail"
+            conflict: Conflict = "fail",
+            no_subs: bool = False
     ):
 
         self._type = force_type
@@ -76,6 +77,7 @@ class Sweeper:
         self._action = action
         self._torrent = torrent
         self._conflict = conflict
+        self._no_subs=  no_subs
 
     def _assume_type(self, type: str, based_on: str):
         """
@@ -96,9 +98,10 @@ class Sweeper:
         """
         logger.info(f"CHOSE_METHOD :: filebot ({self._action})")
         try:
-            self._filebot.down_subs(
-                root=self._torrent.root
-            )
+            if not self._no_subs:
+                self._filebot.down_subs(
+                    root=self._torrent.root
+                )
         except Exception as err:
             logger.error("Failed to get subs.", exc_info=err)
 
