@@ -23,7 +23,7 @@ def get_dir_for_torrent(root: Path, name: str):
     index = 1
     while cur.exists():
         if is_dir_empty(cur):
-            return cur
+            return cur, 0
         cur = root / f"{name}.{index}"
         index += 1
 

@@ -1,1 +1,1 @@
-from .extractor import archive_exts, Extractor
+from .extractor import archive_tail_pattern, archive_head_pattern, Extractor

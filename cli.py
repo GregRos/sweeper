@@ -20,9 +20,14 @@ class InfoArgs(BaseArgs):
     torrent: Torrent
 
 
+class SubsArgs(BaseArgs):
+    command: Literal["getsubs"]
+    torrent: Torrent
+
+
 class SweepArgs(BaseArgs):
     command: Literal["sweep"]
-    conflict: Literal["indexs", "fail", "override"]
+    conflict: Literal["index", "fail", "override"]
     action: SweepAction
     torrent: Torrent
     force_type: Optional[Path]
@@ -54,7 +59,7 @@ def format_usage():
 Force media type: text, audio, program, game, video, video/{movie,show,anime}
             """.strip(),
         "--conflict=fail": "If dest exists, fail. (default)",
-        "--conflict=overwrite": "If dest exists, overwrite.",
+        "--conflict=override": "If dest exists, overwrite.",
         "--conflict=index": "If dest exists, use dest.$N",
     }
     formatted = "\n".join([
@@ -72,6 +77,7 @@ Normally you'd want to run this as part of an automatic process.
 Usage:
     sweeper info <torrent_root>
     sweeper sweep <torrent_root> [options]
+    sweeper getsubs <torrent_root>
     sweeper --help | -h
 
 Options:
@@ -100,6 +106,7 @@ def parse_args():
         "torrent",
         nargs="+"
     )
+    actions.add_parser("getsubs", help="gets subs")
     sweep = actions.add_parser("sweep", help="sort torrent")
     sweep.add_argument(
         "torrent",
@@ -164,6 +171,11 @@ def parse_args():
             force_type=force_type,
             conflict=parsed_args.conflict,
             force_filebot_subtype=force_subtype
+        )
+    elif parsed_args.command == "getsubs":
+        return SubsArgs(
+            torrent=Torrent()
+
         )
     else:
         raise Exception(f"Unknown command {parsed_args.command}")

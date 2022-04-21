@@ -3,8 +3,7 @@ from logging import getLogger, StreamHandler, Formatter
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from extract import archive_exts
-from extract.extractor import multipart_archive_pattern
+from extract import archive_head_pattern, archive_tail_pattern
 from matchers import make_content_matcher
 from matchers import make_title_matcher
 from common.fail import get_path_env
@@ -144,6 +143,10 @@ title_matcher = make_title_matcher(
         "Hi10"
     ]
 ).add_subgroup(
+    "VideoYears", 50, [
+        r"19\d\d"
+    ]
+).add_subgroup(
     "MovieAudioQuality", 30, [
         "5.1",
         "7.1",
@@ -158,7 +161,8 @@ title_matcher = make_title_matcher(
         "XVID",
         r"[XH][\-.]?26[3456]",
         "MP4",
-        "MKV"
+        "MKV",
+        "DivX"
     ]
 ).add_subgroup(
     "VideoSource", 80, [
@@ -205,11 +209,13 @@ title_matcher = make_title_matcher(
         "Movie",
         "Series"
     ]
-).next_group([
+).next_group({
+    "video": 1,
+    "game": 2
+}).next_group([
     "video",
     "audio"
-]
-).add_subgroup(
+]).add_subgroup(
     "AudioEncoding", 80, [
         "AC3",
         "AAC",
@@ -366,10 +372,10 @@ content_matcher = make_content_matcher(
     "icns"
 ).next_group(
     "archive"
-).add_exts(
-    *archive_exts
 ).add_pattern(
-    multipart_archive_pattern
+    archive_tail_pattern
+).add_pattern(
+    archive_head_pattern
 ).finish()
 
 logger = getLogger("sweeper")
