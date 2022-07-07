@@ -21,6 +21,7 @@ archive_tail_pattern = re.compile(r"\.(z\d+|\d+|r\d+)$", re.I)
 multipart_rar = re.compile(r"\.part(\d+)")
 logger = logging.getLogger("sweeper")
 
+
 def get_rar_part(file: Path) -> int | None:
     if file.suffix == ".rar" and len(file.suffixes) > 1:
         try_part = multipart_rar.fullmatch(file.stem)
@@ -62,6 +63,9 @@ class Extractor:
             if file.is_dir():
                 retargeted_path.mkdir(exist_ok=True)
             elif archive_head_pattern.search(file.name):
+                rar_part = get_rar_part(file)
+                if rar_part and rar_part > 1:
+                    continue
                 heads.append(file)
             elif archive_tail_pattern.search(file.name):
                 # pass on tails

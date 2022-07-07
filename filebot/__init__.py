@@ -93,7 +93,8 @@ class FilebotExecutor:
             action: FilebotAction,
             conflict: FilebotConflict,
             force_type: FilebotSubtype,
-            formats: dict[str, str]
+            formats: dict[str, str],
+            subs: bool
     ):
         """
         Processes the torrent using filebot.
@@ -102,6 +103,7 @@ class FilebotExecutor:
         :param conflict: What to do if there is a conflict
         :param force_type: Forces the media type
         :param formats: A dictionary of formats, with {"series": "...", "movies": "...", "anime": "..."}
+        :param subs: Whether to get subs
         :return:
         """
         format_bindings = [f"{k}Format={v}" for k, v in formats.items()]
@@ -110,7 +112,7 @@ class FilebotExecutor:
             "fn:amc",
             root.absolute(),
             "-non-strict",
-            "-get-subtitles",
+            *(["-get-subtitles"] if subs else []),
             "--action",
             action,
             "--conflict",

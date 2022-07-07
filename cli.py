@@ -119,7 +119,8 @@ def parse_args():
         choices=[
             "index",
             "fail",
-            "override"
+            "override",
+            "skip"
         ],
         default="fail"
     )

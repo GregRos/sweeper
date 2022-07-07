@@ -297,6 +297,7 @@ content_matcher = make_content_matcher(
     "program"
 ).add_exts(
     "exe",
+
     "dll",
     "msi",
     "apk",
@@ -313,7 +314,27 @@ content_matcher = make_content_matcher(
     "img",
     "cab",
     "mpq",
-    "dat"
+    "dat",
+    "cfg",
+    "ress",
+    "config",
+    "aspx",
+    "resource",
+    "assets",
+    "ini",
+    "info",
+    "map",
+    "xml",
+    "json",
+    "yaml",
+    "yml",
+    "mdb",
+    "pak",
+    "man",
+    "pdb",
+    "wsf",
+    "hashdb",
+    "asar"
 ).next_group(
     "unsortable"
 ).add_exts(
@@ -325,14 +346,8 @@ content_matcher = make_content_matcher(
     "mmd",
     "xsl",
     "xslx",
-    "xml",
-    "json",
-    "yaml",
-    "yml",
     "rtf",
     "chm",
-    "strings",
-    "log",
     "url",
     "sfv",
     "tex",

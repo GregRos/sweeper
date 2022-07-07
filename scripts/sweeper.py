@@ -50,6 +50,7 @@ class Sweeper:
     _filebot_type: FilebotSubtype
     _conflict: Conflict
     _no_subs: bool
+
     def __init__(
             self,
             torrent: Torrent,
@@ -77,7 +78,7 @@ class Sweeper:
         self._action = action
         self._torrent = torrent
         self._conflict = conflict
-        self._no_subs=  no_subs
+        self._no_subs = no_subs
 
     def _assume_type(self, type: str, based_on: str):
         """
@@ -110,24 +111,13 @@ class Sweeper:
             conflict=self._conflict,
             action=get_filebot_action(self._action),
             force_type=self._filebot_type,
+            subs=not self._no_subs,
             formats={
                 "movie": self._library.movies.absolute().joinpath(filebot_format),
                 "series": self._library.shows.absolute().joinpath(filebot_format),
                 "anime": self._library.anime.absolute().joinpath(filebot_format)
             }
         )
-
-    def _get_target(self, start: Path):
-        next_target = start.joinpath(self._torrent.name)
-        if self._conflict == "fail":
-            return file_exists(next_target, None)
-        elif self._conflict == "index":
-            final_target, index = get_dir_for_torrent(self._dest, self._torrent.name)
-            file_exists(next_target, f"Adding free suffix '.{index}'.")
-            return final_target
-        else:
-            file_exists(next_target, "Will overwrite.")
-            return next_target
 
     def _sweep_files(self):
         logger.info(f"CHOSE_METHOD :: manual ({self._action})")
@@ -160,8 +150,6 @@ class Sweeper:
     def _get_target_by_group(self):
         if self._type == "program":
             return self._library.programs
-        elif self._type == "game":
-            return self._library.games
         elif self._type == "audio":
             return self._library.audio
         elif self._type == "text":
@@ -175,7 +163,7 @@ class Sweeper:
         content_info = self._content_matcher.match(self._torrent)
         logger.info(f"SWEEPING {self._torrent.name}")
         content = content_info[0]
-        if content.one_of("archive"):
+        if content.one_of("archive") and not content_info.get_type("program").is_greater(0.01):
             logger.info(f"Archive extensions found: {', '.join(content.exts)}")
             self._torrent = self._extractor.extract(self._torrent)
             content_info = self._content_matcher.match(self._torrent)
@@ -188,19 +176,17 @@ class Sweeper:
         if self._type:
             logger.info(f"FORCED type '{self._type}'")
         else:
-            if not content.is_greater(soft_threshold):
-                # This is an error because it shouldn't happen, as it means this is a weird mixed torrent
-                # If the torrent has unknown extensions, it would be marked as Unknown.
-                raise_bad_input(f"Too low content ratio {content.ratio}.")
-            elif content.type == "unsortable":
+            if content.type == "unsortable":
                 raise_bad_input(f"Torrent content detected as 'unsortable'.")
             elif content.type == "image":
                 raise_bad_input(f"Torrent content detected as 'image', which isn't supported.")
             elif content.type == "Unknown":
                 not_enough_info(f"Content matched as Unknown.", error=False)
                 if not title.is_greater(certain_threshold):
-                    not_enough_info(f"Content is unknown, Title is below threshold.", error=True)
-                self._assume_type(title.type, "Title")
+                    self._assume_type("program", "default")
+
+                chosen_type = "program" if title.type == "Unknown" else title.type
+                self._assume_type(chosen_type, "Title")
             elif content.type == "program":
                 self._assume_type("program", "Content")
                 if not title.is_greater(soft_threshold):
@@ -208,13 +194,13 @@ class Sweeper:
                         f"Title Detector is at {title.chance}, which is low. Assuming default.",
                         error=False
                     )
-                    self._assume_type("game", "Default")
+                    self._assume_type("program", "Default")
                 elif title.type not in ["game", "program"]:
                     detector_mismatch(
                         f"Title Detector detects {title.type}, which is not valid for 'program'. Assuming default.",
                         error=False
                     )
-                    self._assume_type("game", "Default")
+                    self._assume_type("program", "Default")
                 else:
                     self._assume_type(title.type, "Title")
             else:

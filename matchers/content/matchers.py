@@ -15,7 +15,7 @@ class RegexpExtMatcher:
         else:
             self._pattern = regexp
 
-    def get_type(self, file: Path):
+    def get_type(self):
         return self._type
 
     def test(self, file: Path):
@@ -38,6 +38,17 @@ class ContentMatch:
         return type is None or self.type == type
 
 
+class ContentMatcherResult(List[ContentMatch]):
+    def __new__(cls, *args, **kwargs):
+        return list.__new__(cls)
+
+    def __init__(self, seq=()):
+        super().__init__(seq)
+
+    def get_type(self, type: str):
+        return next((x for x in self if x.type == type), ContentMatch(type, 0, 0, set()))
+
+
 no_match = "Unknown"
 
 
@@ -49,11 +60,11 @@ class ContentMatcher:
 
     def _classify_file(self, file: Path):
         return next(
-            (matcher.get_type(file) for matcher in self._matchers if matcher.test(file)),
+            (matcher.get_type() for matcher in self._matchers if matcher.test(file)),
             "Unknown"
         )
 
-    def match(self, torrent: Torrent) -> List[ContentMatch]:
+    def match(self, torrent: Torrent) -> ContentMatcherResult:
         total_size = 0
         content_matches: dict[str, ContentMatch] = {}
         for file in torrent.get_all():
@@ -83,4 +94,4 @@ class ContentMatcher:
             , key=lambda x: x.ratio, reverse=True
         )
 
-        return ratio_list
+        return ContentMatcherResult(ratio_list)
