@@ -18,7 +18,7 @@ from util import get_dir_for_torrent
 logger = logging.getLogger("sweeper")
 Conflict: TypeAlias = Literal["override", "index", "fail"]
 
-SweepAction: TypeAlias = Literal["copy", "hard", "move"]
+SweepAction: TypeAlias = Literal["copy", "hard", "move", "test"]
 soft_threshold = 0.8
 hard_threshold = 0.9
 certain_threshold = 0.93
@@ -27,6 +27,8 @@ certain_threshold = 0.93
 def get_filebot_action(action: SweepAction) -> FilebotAction:
     if action == "copy":
         return "copy"
+    if action == "test":
+        return "test"
     if action == "hard":
         return "duplicate"
     if action == "move":
@@ -137,11 +139,16 @@ class Sweeper:
                 file_exists(final_target, "Will overwrite.")
 
         if self._action == "move":
+            logger.info(f"MOVING '{self._torrent.root}' to '{final_target}'")
             move(self._torrent.root, final_target)
         elif self._action == "copy":
+            logger.info(f"COPYING '{self._torrent.root}' to '{final_target}'")
             copytree(self._torrent.root, final_target)
         elif self._action == "hard":
+            logger.info(f"HARDLINKING '{self._torrent.root}' to '{final_target}'")
             copytree(self._torrent.root, final_target, copy_function=link)
+        elif self._action == "test":
+            logger.info(f"NOOP '{self._torrent.root}' to '{final_target}'")
         else:
             raise Exception(f"Unknown action {self._action}")
 
