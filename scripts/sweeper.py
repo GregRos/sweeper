@@ -157,6 +157,8 @@ class Sweeper:
     def _get_target_by_group(self):
         if self._type == "program":
             return self._library.programs
+        elif self._type == "game":
+            return self._library.games
         elif self._type == "audio":
             return self._library.audio
         elif self._type == "text":
@@ -201,13 +203,13 @@ class Sweeper:
                         f"Title Detector is at {title.chance}, which is low. Assuming default.",
                         error=False
                     )
-                    self._assume_type("program", "Default")
+                    self._assume_type("game", "Default")
                 elif title.type not in ["game", "program"]:
                     detector_mismatch(
                         f"Title Detector detects {title.type}, which is not valid for 'program'. Assuming default.",
                         error=False
                     )
-                    self._assume_type("program", "Default")
+                    self._assume_type("game", "Default")
                 else:
                     self._assume_type(title.type, "Title")
             else:
