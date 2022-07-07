@@ -8,7 +8,7 @@ from cli import parse_args, InfoArgs, SweepArgs, SubsArgs
 from common import print_cmd
 from extract import Extractor
 from filebot import FilebotExecutor
-from common.fail import get_path_env, SweeperError
+from common.fail import get_path_env
 from scripts.info import run_info
 from scripts.sweeper import Sweeper
 from util import LibraryRoots

@@ -79,7 +79,7 @@ class Extractor:
         target_dir.mkdir(exist_ok=True)
 
         if len(heads) == 1:
-            extract_single(target_dir, heads[0])
+            extract_single(target_dir.parent, heads[0])
         else:
             extract_all_files(target_dir, heads)
 
