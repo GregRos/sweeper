@@ -33,7 +33,7 @@ def get_rar_part(file: Path) -> int | None:
 
 def extract_single(target_dir: Path, archive: Path):
     logger.info("Extracting as single archive")
-    patoolib.extract_archive(archive=archive, outdir=target_dir, interactive=False)
+    patoolib.extract_archive(archive=str(archive), outdir=str(target_dir), interactive=False)
 
 
 def extract_all_files(target_dir: Path, archives: List[Path]):
@@ -41,8 +41,8 @@ def extract_all_files(target_dir: Path, archives: List[Path]):
     for archive in archives:
         outdir = target_dir / archive.stem
         patoolib.extract_archive(
-            archive=archive,
-            outdir=outdir,
+            archive=str(archive),
+            outdir=str(outdir),
             interactive=False,
 
         )
