@@ -36,7 +36,7 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
     raise Exception("Not here")
 
 
-filebot_format = '{ ~plex ** " [tmdbid-$id]" % " - [$vf, $vc, $bitrate, $ac]" }'
+filebot_format = '{ ~plex ** " [tmdbid-$tmdbid]" % " - [$vf, $vc, $bitrate, $ac]" }'
 
 
 class Sweeper:
