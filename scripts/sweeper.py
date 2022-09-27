@@ -30,7 +30,7 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
     if action == "test":
         return "test"
     if action == "hard":
-        return "duplicate"
+        return "replicate"
     if action == "move":
         return "move"
     raise Exception("Not here")

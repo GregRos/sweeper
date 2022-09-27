@@ -9,7 +9,7 @@ from typing import Literal, TypeAlias, IO, Callable
 from common import print_cmd
 from common.fail import SweeperError
 
-FilebotAction: TypeAlias = Literal["move", "hardlink", "duplicate", "symlink", "copy", "test"]
+FilebotAction: TypeAlias = Literal["move", "hardlink", "replicate", "symlink", "copy", "test"]
 FilebotConflict: TypeAlias = Literal["skip", "override", "auto", "index", "fail"]
 FilebotSubtype: TypeAlias = Literal["movie", "show", "anime"]
 logger = getLogger("sweeper")
