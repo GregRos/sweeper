@@ -54,11 +54,13 @@ def run(args: SweepArgs | InfoArgs):
             extractor=extractor,
             force_type=args.force_type,
             force_dest=args.force_dest,
+            interactive=args.interactive,
             title_matcher=config.title_matcher,
             content_matcher=config.content_matcher,
             conflict=args.conflict,
             force_filebot_type=args.force_filebot_subtype,
-            no_subs=args.no_subs
+            no_subs=args.no_subs,
+            force_title=args.force_title
         ).run_sweep()
 
 

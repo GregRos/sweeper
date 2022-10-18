@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="OPEN_SSH" host="perdido.bond" id="68e2c81d-19c3-47b2-a1c3-970cb5b5879c" port="22" nameFormat="DESCRIPTIVE" username="gr" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

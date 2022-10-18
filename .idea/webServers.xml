@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="9a76c7ea-8701-4410-82ce-8a08842b248b" name="perdido">
+        <fileTransfer accessType="SFTP" host="perdido.bond" port="22" sshConfigId="68e2c81d-19c3-47b2-a1c3-970cb5b5879c" sshConfig="gr@perdido.bond:22 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

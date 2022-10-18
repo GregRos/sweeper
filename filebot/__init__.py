@@ -87,6 +87,11 @@ class FilebotExecutor:
         else:
             raise SweeperError("BAD_FILEBOT_TYPE", f"Unknown filebot type '{type}'.")
 
+    def _get_force_title(self, title: str | None):
+        if self is None:
+            return []
+        return [f"ut_title={title}"]
+
     def rename(
             self,
             root: Path,
@@ -94,10 +99,16 @@ class FilebotExecutor:
             conflict: FilebotConflict,
             force_type: FilebotSubtype,
             formats: dict[str, str],
-            subs: bool
+            interactive: bool,
+            force_title: str,
+            subs: bool,
+            multi_media: bool
     ):
         """
         Processes the torrent using filebot.
+        :param multi_media: True if the input has multiple shows/movies etc
+        :param interactive: Forces interactive mode (?)
+        :param force_title: Forces title
         :param root: The torrent root
         :param action: The action to perform
         :param conflict: What to do if there is a conflict
@@ -113,16 +124,20 @@ class FilebotExecutor:
             root.absolute(),
             "-non-strict",
             *(["-get-subtitles"] if subs else []),
+            *(["--mode", "interactive"] if interactive else []),
             "--action",
             action,
             "--conflict",
             conflict,
-            "-no-history",
+            "--log",
+            "all",
             # Useless path needed by amc
             "--output",
             Path(__file__).parent,
             "--def",
             "music=n",
+            "artwork=y",
             *self._get_force_for_type(force_type),
+            *self._get_force_title(force_title),
             *format_bindings
         ], 60 * 60)

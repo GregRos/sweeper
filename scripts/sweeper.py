@@ -36,7 +36,8 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
     raise Exception("Not here")
 
 
-filebot_format = '{ ~plex ** " [tmdbid-$tmdbid]" % " - [$vf, $vc, $bitrate, $ac]" }'
+show_format = '{n} ({y}) [tvdbid-{id}]/Season {s.pad(2)}/{n} ({y}) - S{s.pad(2)}E{e.pad(2)} - {t} - [{vf}, {vc}, {bitrate}, {ac}]'
+movie_format = '{n} ({y}) [tmdbid-{tmdbid}]/{n} ({y}) - [{vf}, {vc}, {bitrate}, {ac}]'
 
 
 class Sweeper:
@@ -66,9 +67,14 @@ class Sweeper:
             force_type: str = None,
             force_filebot_type: FilebotSubtype = None,
             conflict: Conflict = "fail",
-            no_subs: bool = False
+            no_subs: bool = False,
+            force_title: str = None,
+            interactive=False,
+            multi_media=False
     ):
 
+        self._interactive = interactive
+        self._force_title = force_title
         self._type = force_type
         self._dest = force_dest
         self._filebot_type = force_filebot_type
@@ -81,6 +87,7 @@ class Sweeper:
         self._torrent = torrent
         self._conflict = conflict
         self._no_subs = no_subs
+        self._multi_media = multi_media
 
     def _assume_type(self, type: str, based_on: str):
         """
@@ -114,11 +121,14 @@ class Sweeper:
             action=get_filebot_action(self._action),
             force_type=self._filebot_type,
             subs=not self._no_subs,
+            force_title=self._force_title,
+            interactive=self._interactive,
             formats={
-                "movie": self._library.movies.absolute().joinpath(filebot_format),
-                "series": self._library.shows.absolute().joinpath(filebot_format),
-                "anime": self._library.anime.absolute().joinpath(filebot_format)
-            }
+                "movie": self._library.movies.absolute().joinpath(movie_format),
+                "series": self._library.shows.absolute().joinpath(show_format),
+                "anime": self._library.anime.absolute().joinpath(show_format)
+            },
+            multi_media=self._multi_media
         )
 
     def _sweep_files(self):

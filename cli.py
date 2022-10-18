@@ -25,12 +25,15 @@ class SubsArgs(BaseArgs):
 
 class SweepArgs(BaseArgs):
     conflict: Literal["index", "fail", "override"]
+    interactive: bool
     action: SweepAction
     torrent: Torrent
     force_type: Optional[Path]
     force_dest: Optional[Path]
+    force_title: Optional[str]
     force_filebot_subtype: FilebotSubtype
     no_subs: bool
+    multi_media: bool
 
 
 logger = getLogger("sweeper")
@@ -148,6 +151,27 @@ def parse_args():
     )
 
     sweep.add_argument(
+        "--force-title",
+        default=None,
+        dest="force_title",
+        type=str
+    )
+
+    sweep.add_argument(
+        "--interactive",
+        default=False,
+        dest="interactive",
+        action="store_true"
+    )
+
+    sweep.add_argument(
+        "--multi",
+        default=False,
+        dest="multi",
+        action="store_true"
+    )
+
+    sweep.add_argument(
         "--force-dest",
         default=None,
         dest="force_dest",
@@ -180,7 +204,10 @@ def parse_args():
             force_type=force_type,
             conflict=parsed_args.conflict,
             force_filebot_subtype=force_subtype,
-            no_subs=parsed_args.no_subs
+            no_subs=parsed_args.no_subs,
+            force_title=parsed_args.force_title,
+            interactive=parsed_args.interactive,
+            multi=parsed_args.multi
         )
     elif parsed_args.command == "getsubs":
         return SubsArgs(
