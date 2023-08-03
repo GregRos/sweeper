@@ -37,7 +37,7 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
 
 
 show_format = '{n} ({y}) [tvdbid-{id}]/Season {s.pad(2)}/{n} ({y}) - S{s.pad(2)}E{e.pad(2)} - {t} - [{vf}, {vc}, {bitrate}, {ac}]'
-movie_format = '{n} ({y}) [tmdbid-{tmdbid}]/{n} ({y}) - [{vf}, {vc}, {bitrate}, {ac}]'
+movie_format = '{n} ({y}) [tmdbid-{tmdbid}]/{n} ({y}) [tmdbid-{tmdbid}] - [{vf}, {vc}, {bitrate}, {ac}]'
 
 
 class Sweeper:
