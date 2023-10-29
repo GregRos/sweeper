@@ -3,6 +3,9 @@
   <component name="AhkProjectSettings">
     <option name="defaultAhkSdk" value="AutoHotkey v1.1.33" />
   </component>
+  <component name="Black">
+    <option name="sdkName" value="Python 3.10" />
+  </component>
   <component name="ComposerSettings">
     <execution />
   </component>
