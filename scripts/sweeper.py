@@ -156,9 +156,11 @@ class Sweeper:
             copytree(self._torrent.root, final_target)
         elif self._action == "hard":
             logger.info(f"HARDLINKING '{self._torrent.root}' to '{final_target}'")
-            if self._torrent.root.is_file:
+            if self._torrent.root.is_file():
+                print("Linking file")
                 link(self._torrent.root, final_target)
             else:
+                print("Linking dir")
                 copytree(self._torrent.root, final_target, copy_function=link)
         elif self._action == "test":
             logger.info(f"NOOP '{self._torrent.root}' to '{final_target}'")
