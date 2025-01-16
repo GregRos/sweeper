@@ -10,8 +10,7 @@ from common import Torrent
 from extract import Extractor
 from filebot import FilebotExecutor, FilebotAction, FilebotSubtype
 from matchers import TitleMatcher, ContentMatcher
-from common.fail import not_enough_info, detector_mismatch, \
-    file_exists, raise_bad_input
+from common.fail import not_enough_info, detector_mismatch, file_exists, raise_bad_input
 from scripts.info import to_content_table, to_title_table
 from util import get_dir_for_torrent
 
@@ -36,8 +35,8 @@ def get_filebot_action(action: SweepAction) -> FilebotAction:
     raise Exception("Not here")
 
 
-show_format = '{n} ({y}) [tvdbid-{id}]/Season {s.pad(2)}/{n} ({y}) - S{s.pad(2)}E{e.pad(2)} - {t} - [{vf}, {vc}, {bitrate}, {ac}]'
-movie_format = '{n} ({y}) [tmdbid-{tmdbid}]/{n} ({y}) [tmdbid-{tmdbid}] - [{vf}, {vc}, {bitrate}, {ac}]'
+show_format = "{n} ({y}) [tvdbid-{id}]/Season {s.pad(2)}/{n} ({y}) - S{s.pad(2)}E{e.pad(2)} - {t} - [{vf}, {vc}, {bitrate}, {ac}]"
+movie_format = "{n} ({y}) [tmdbid-{tmdbid}]/{n} ({y}) [tmdbid-{tmdbid}] - [{vf}, {vc}, {bitrate}, {ac}]"
 
 
 class Sweeper:
@@ -48,29 +47,29 @@ class Sweeper:
     _content_matcher: ContentMatcher
     _filebot: FilebotExecutor
     _extractor: Extractor
-    _dest: Path
+    _dest: Path | None
     _type: str | None
-    _filebot_type: FilebotSubtype
+    _filebot_type: FilebotSubtype | None
     _conflict: Conflict
     _no_subs: bool
 
     def __init__(
-            self,
-            torrent: Torrent,
-            action: SweepAction,
-            library: Any,
-            title_matcher: TitleMatcher,
-            content_matcher: ContentMatcher,
-            filebot: FilebotExecutor,
-            extractor: Extractor,
-            force_dest: Path = None,
-            force_type: str = None,
-            force_filebot_type: FilebotSubtype = None,
-            conflict: Conflict = "fail",
-            no_subs: bool = False,
-            force_title: str = None,
-            interactive=False,
-            multi_media=False
+        self,
+        torrent: Torrent,
+        action: SweepAction,
+        library: Any,
+        title_matcher: TitleMatcher,
+        content_matcher: ContentMatcher,
+        filebot: FilebotExecutor,
+        extractor: Extractor,
+        force_dest: Path | None = None,
+        force_type: str | None = None,
+        force_filebot_type: FilebotSubtype | None = None,
+        conflict: Conflict = "fail",
+        no_subs: bool = False,
+        force_title: str | None = None,
+        interactive: bool = False,
+        multi_media: bool = False,
     ):
 
         self._interactive = interactive
@@ -97,9 +96,7 @@ class Sweeper:
         log_code = "Assumption"
         logger.info(
             f"ASSUMING torrent is of type '{type}' ({based_on})",
-            extra={
-                "type": log_code
-            }
+            extra={"type": log_code},
         )
 
     def _sweep_filebot(self):
@@ -109,9 +106,7 @@ class Sweeper:
         logger.info(f"CHOSE_METHOD :: filebot ({self._action})")
         try:
             if not self._no_subs:
-                self._filebot.down_subs(
-                    root=self._torrent.root
-                )
+                self._filebot.down_subs(root=self._torrent.root)
         except Exception as err:
             logger.error("Failed to get subs.", exc_info=err)
 
@@ -126,14 +121,15 @@ class Sweeper:
             formats={
                 "movie": self._library.movies.absolute().joinpath(movie_format),
                 "series": self._library.shows.absolute().joinpath(show_format),
-                "anime": self._library.anime.absolute().joinpath(show_format)
+                "anime": self._library.anime.absolute().joinpath(show_format),
             },
-            multi_media=self._multi_media
+            multi_media=self._multi_media,
         )
 
     def _sweep_files(self):
+        if not self._dest:
+            raise Exception("No destination set.")
         logger.info(f"CHOSE_METHOD :: manual ({self._action})")
-        sweep_type: SweepAction
         if self._torrent.is_temp:
             logger.info(f"FORCING move (torrent is temp, after extract)")
             self._action = "move"
@@ -187,7 +183,9 @@ class Sweeper:
         content_info = self._content_matcher.match(self._torrent)
         logger.info(f"SWEEPING {self._torrent.name}")
         content = content_info[0]
-        if content.one_of("archive") and not content_info.get_type("program").is_greater(0.01):
+        if content.one_of("archive") and not content_info.get_type(
+            "program"
+        ).is_greater(0.01):
             logger.info(f"Archive extensions found: {', '.join(content.exts)}")
             self._torrent = self._extractor.extract(self._torrent)
             content_info = self._content_matcher.match(self._torrent)
@@ -203,7 +201,9 @@ class Sweeper:
             if content.type == "unsortable":
                 raise_bad_input(f"Torrent content detected as 'unsortable'.")
             elif content.type == "image":
-                raise_bad_input(f"Torrent content detected as 'image', which isn't supported.")
+                raise_bad_input(
+                    f"Torrent content detected as 'image', which isn't supported."
+                )
             elif content.type == "Unknown":
                 not_enough_info(f"Content matched as Unknown.", error=False)
                 if not title.is_greater(certain_threshold):
@@ -216,13 +216,13 @@ class Sweeper:
                 if not title.is_greater(soft_threshold):
                     not_enough_info(
                         f"Title Detector is at {title.chance}, which is low. Assuming default.",
-                        error=False
+                        error=False,
                     )
                     self._assume_type("game", "Default")
                 elif title.type not in ["game", "program"]:
                     detector_mismatch(
                         f"Title Detector detects {title.type}, which is not valid for 'program'. Assuming default.",
-                        error=False
+                        error=False,
                     )
                     self._assume_type("game", "Default")
                 else:
@@ -231,7 +231,7 @@ class Sweeper:
                 if content.type != title.type:
                     detector_mismatch(
                         f"Title detector detected {title.type}, which is not valid.",
-                        error=False
+                        error=False,
                     )
                 # This includes: audio, video, text
                 self._assume_type(content.type, "Content")

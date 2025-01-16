@@ -12,11 +12,11 @@ class TitleGroupBuilder:
     def __init__(self):
         self._matchers = []
 
-    def next_group(self, weights: dict[str, float] | list[str] = None):
+    def next_group(self, weights: dict[str, float] | list[str] | None = None):
         if isinstance(weights, List):
             self._weights = {k: 1 / len(weights) for k in weights}
         elif isinstance(weights, dict):
-            total_weights = sum((x for k, x in weights.items()))
+            total_weights = sum((x for _, x in weights.items()))
             self._weights = {k: v / total_weights for k, v in weights.items()}
         return self
 
@@ -24,8 +24,7 @@ class TitleGroupBuilder:
         all = [
             RegexpMatcher(type, rf"\b{word}\b", weight * percent / 100, subgroup_name)
             for word in words
-            for type, weight
-            in self._weights.items()
+            for type, weight in self._weights.items()
         ]
         self._matchers.extend(all)
         return self

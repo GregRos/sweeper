@@ -1,17 +1,16 @@
 import argparse
-import sys
 from logging import getLogger
 from pathlib import Path
-from typing import Literal, Optional, IO
+from typing import Any, Literal, Optional
 
-from common import Torrent, print_cmd
+from common import Torrent
 from filebot import FilebotSubtype
 from common.fail import get_input_dir
 from scripts.sweeper import SweepAction
 
 
 class BaseArgs:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         self.__dict__.update(kwargs)
 
 
@@ -23,12 +22,21 @@ class SubsArgs(BaseArgs):
     torrent: Torrent
 
 
+class MoveSubsArgs(BaseArgs):
+    conflict: Literal["index", "fail", "override"]
+    torrent: Torrent
+    force_dest: Optional[Path]
+    force_type: Optional[str]
+    force_title: Optional[str]
+    force_filebot_subtype: FilebotSubtype
+
+
 class SweepArgs(BaseArgs):
     conflict: Literal["index", "fail", "override"]
     interactive: bool
     action: SweepAction
     torrent: Torrent
-    force_type: Optional[Path]
+    force_type: Optional[str]
     force_dest: Optional[Path]
     force_title: Optional[str]
     force_filebot_subtype: FilebotSubtype
@@ -39,15 +47,15 @@ class SweepArgs(BaseArgs):
 logger = getLogger("sweeper")
 
 
-def parse_force_type(force_type: str):
+def parse_force_type(force_type: str) -> tuple[Optional[str], Optional[str]]:
     if force_type:
         split = force_type.split("/")
         if len(split) > 1:
-            return split
+            return tuple(split)  # type: ignore
         else:
-            return [force_type, None]
+            return (force_type, None)
     else:
-        return [None, None]
+        return (None, None)
 
 
 def format_usage():
@@ -63,11 +71,11 @@ Force media type: text, audio, program, game, video, video/{movie,show,anime}
         "--conflict=override": "If dest exists, overwrite.",
         "--conflict=index": "If dest exists, use dest.$N",
         "--conflict=skip": "If dest exists, skip.",
-        "--no-subs": "Don't download subs."
+        "--no-subs": "Don't download subs.",
     }
-    formatted = "\n".join([
-        f"{k.ljust(30).rjust(34)}{v}" for k, v in options_block.items()
-    ])
+    formatted = "\n".join(
+        [f"{k.ljust(30).rjust(34)}{v}" for k, v in options_block.items()]
+    )
     return f"""
 Sorts torrents and renames media to work with streaming servers. Assumes
 the path it receives is the root of a torrent download.
@@ -94,38 +102,25 @@ class CustomizedArgumentParser(argparse.ArgumentParser):
 
 
 def parse_args():
-    root_parser = CustomizedArgumentParser(
-        add_help=True
-    )
+    root_parser = CustomizedArgumentParser(add_help=True)
 
     actions = root_parser.add_subparsers(
-        title='actions',
+        title="actions",
         required=True,
-        dest='command',
-        parser_class=CustomizedArgumentParser
+        dest="command",
+        parser_class=CustomizedArgumentParser,
     )
     info = actions.add_parser("info")
-    info.add_argument(
-        "torrent",
-        nargs="+"
-    )
+    info.add_argument("torrent", nargs="+")
     getsubs = actions.add_parser("getsubs", help="gets subs")
     getsubs.add_argument("torrent", nargs="+")
     sweep = actions.add_parser("sweep", help="sort torrent")
-    sweep.add_argument(
-        "torrent",
-        nargs="+"
-    )
+    sweep.add_argument("torrent", nargs="+")
     sweep.add_argument(
         "--conflict",
         type=str,
-        choices=[
-            "index",
-            "fail",
-            "override",
-            "skip"
-        ],
-        default="fail"
+        choices=["index", "fail", "override", "skip"],
+        default="fail",
     )
     sweep.add_argument(
         "--force-type",
@@ -139,61 +134,32 @@ def parse_args():
             "audio",
             "text",
             "program",
-            "game"
-        ]
+            "game",
+        ],
     )
 
-    sweep.add_argument(
-        "--no-subs",
-        default=False,
-        dest="no_subs",
-        action='store_true'
-    )
+    sweep.add_argument("--no-subs", default=False, dest="no_subs", action="store_true")
+
+    sweep.add_argument("--force-title", default=None, dest="force_title", type=str)
 
     sweep.add_argument(
-        "--force-title",
-        default=None,
-        dest="force_title",
-        type=str
+        "--interactive", default=False, dest="interactive", action="store_true"
     )
 
-    sweep.add_argument(
-        "--interactive",
-        default=False,
-        dest="interactive",
-        action="store_true"
-    )
-
-    sweep.add_argument(
-        "--multi",
-        default=False,
-        dest="multi",
-        action="store_true"
-    )
+    sweep.add_argument("--multi", default=False, dest="multi", action="store_true")
 
     sweep.add_argument(
         "--force-dest",
         default=None,
         dest="force_dest",
-        type=lambda s: get_input_dir("force-dest", s)
+        type=lambda s: get_input_dir("force-dest", s),
     )
-    sweep.add_argument(
-        "--action",
-        default="copy",
-        choices=[
-            "move",
-            "copy",
-            "hard"
-        ]
-    )
+    sweep.add_argument("--action", default="copy", choices=["move", "copy", "hard"])
     parsed_args = root_parser.parse_args()
-    parsed_args.torrent = get_input_dir('torrent', parsed_args.torrent)
+    parsed_args.torrent = get_input_dir("torrent", parsed_args.torrent)
 
     if parsed_args.command == "info":
-        return InfoArgs(
-            command="info",
-            torrent=Torrent(parsed_args.torrent)
-        )
+        return InfoArgs(command="info", torrent=Torrent(parsed_args.torrent))
     elif parsed_args.command == "sweep":
         force_type, force_subtype = parse_force_type(parsed_args.force_type)
         return SweepArgs(
@@ -207,12 +173,9 @@ def parse_args():
             no_subs=parsed_args.no_subs,
             force_title=parsed_args.force_title,
             interactive=parsed_args.interactive,
-            multi=parsed_args.multi
+            multi=parsed_args.multi,
         )
     elif parsed_args.command == "getsubs":
-        return SubsArgs(
-            torrent=Torrent(parsed_args.torrent)
-
-        )
+        return SubsArgs(torrent=Torrent(parsed_args.torrent))
     else:
         raise Exception(f"Unknown command {parsed_args.command}")

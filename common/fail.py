@@ -3,6 +3,7 @@ from __future__ import annotations
 from logging import getLogger
 from os import getenv, access, X_OK
 from pathlib import Path
+from typing import Any, Optional
 
 logger = getLogger("sweeper")
 
@@ -21,9 +22,7 @@ def not_enough_info(message: str, error: bool):
     if error:
         raise SweeperError("LOW_INFO", message)
     else:
-        logger.warning(
-            insert_code("LOW_INFO", message)
-        )
+        logger.warning(insert_code("LOW_INFO", message))
 
 
 def detector_mismatch(message: str, error: bool):
@@ -31,9 +30,7 @@ def detector_mismatch(message: str, error: bool):
     if error:
         raise SweeperError(err_code, message)
     else:
-        logger.warning(
-            insert_code(err_code, message)
-        )
+        logger.warning(insert_code(err_code, message))
 
 
 def file_exists(what: Path, following_action: str | None):
@@ -50,15 +47,12 @@ def raise_bad_input(message: str):
     raise SweeperError("BAD_INPUT", message)
 
 
-def get_input_dir(var_name: str, var_value: str, can_create=False):
+def get_input_dir(var_name: str, var_value: str, can_create: bool = False):
     def raise_err(text: str):
         raise_bad_input(f"Path input '{var_name}'='{var_value}' is bad, because {text}")
 
     if not var_value:
         raise_err("it's missing.")
-
-    if type(var_value) is list:
-        var_value = " ".join(var_value)
 
     p = Path(var_value)
     if not p.exists():
@@ -74,13 +68,19 @@ def raise_bad_env(message: str):
     raise SweeperError("BAD_ENV", message)
 
 
-def get_path_env(var_name: str, is_dir: bool = None, can_create: bool = False, check_exe=False, default=None):
-    def raise_err(rest: str):
+def get_path_env(
+    var_name: str,
+    is_dir: Optional[bool] = None,
+    can_create: bool = False,
+    check_exe: bool = False,
+    default: Optional[Path] = None,
+) -> Path:
+    def raise_err(rest: str) -> Any:
         raise_bad_env(f"Env variable '{var_name}' is bad: {rest}")
 
     value = getenv(var_name)
     if value is None:
-        return default or raise_err("it's empty.")
+        return Path(default) if default else raise_err("it's empty.")
 
     p = Path(value)
 

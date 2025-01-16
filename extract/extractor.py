@@ -1,20 +1,39 @@
 from __future__ import annotations
 
 import logging
+
 import re
 from os import PathLike
 from pathlib import Path
-from shutil import copy
 from typing import List
 
-import patoolib
+import patoolib  # type: ignore
 
 from common import Torrent
 from util import get_dir_for_torrent
 
-archive_head_pattern = re.compile("|".join([f"\.{x}$" for x in [
-    "rar", "7z", "zip", "tar", "gz", "bz2", "z01", r"zip\.001", r"7z\.001", "cbr", "cb7", "cbt",
-]]), re.I)
+archive_head_pattern = re.compile(
+    "|".join(
+        [
+            f"\\.{x}$"
+            for x in [
+                "rar",
+                "7z",
+                "zip",
+                "tar",
+                "gz",
+                "bz2",
+                "z01",
+                r"zip\.001",
+                r"7z\.001",
+                "cbr",
+                "cb7",
+                "cbt",
+            ]
+        ]
+    ),
+    re.I,
+)
 
 archive_tail_pattern = re.compile(r"\.(z\d+|\d+|r\d+)$", re.I)
 
@@ -33,7 +52,9 @@ def get_rar_part(file: Path) -> int | None:
 
 def extract_single(target_dir: Path, archive: Path):
     logger.info("Extracting as single archive")
-    patoolib.extract_archive(archive=str(archive), outdir=str(target_dir), interactive=False)
+    patoolib.extract_archive(
+        archive=str(archive), outdir=str(target_dir), interactive=False
+    )
 
 
 def extract_all_files(target_dir: Path, archives: List[Path]):
@@ -44,7 +65,6 @@ def extract_all_files(target_dir: Path, archives: List[Path]):
             archive=str(archive),
             outdir=str(outdir),
             interactive=False,
-
         )
 
 
@@ -55,9 +75,9 @@ class Extractor:
         self.working_dir = Path(working_dir)
 
     def extract(self, torrent: Torrent):
-        target_dir, index = get_dir_for_torrent(self.working_dir, torrent.name)
+        target_dir, _ = get_dir_for_torrent(self.working_dir, torrent.name)
         target_dir.mkdir(exist_ok=True)
-        heads = []
+        heads: list[Path] = []
         for file in torrent.get_all():
             retargeted_path = target_dir.joinpath(file)
             if file.is_dir():

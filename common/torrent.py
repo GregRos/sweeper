@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from os import PathLike
 from pathlib import Path
-from shutil import copy, copytree, move
+from shutil import copytree
 
 
 class Torrent:
@@ -12,7 +12,7 @@ class Torrent:
     root: Path
     total_downloaded: int | None
 
-    def __init__(self, folder: str | PathLike[str], is_temp=False):
+    def __init__(self, folder: str | PathLike[str], is_temp: bool = False):
         self.is_temp = is_temp
         self.root = Path(folder)
         self.name = self.root.name
@@ -24,7 +24,7 @@ class Torrent:
             return self.root.glob("**/*")
 
     def move(self, new_root: Path | PathLike[str] | str):
-        new_location = new_root / self.root.name
+        new_location = Path(new_root) / self.root.name
         self.root.rename(new_location)
 
     def copy(self, new_root: Path | PathLike[str] | str):

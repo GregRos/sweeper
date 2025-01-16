@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import List, Pattern
+from typing import Any, Iterable, List, Pattern
 
 from common.torrent import Torrent
 
 
 class RegexpExtMatcher:
-    def __init__(self, t: str, regexp: str | Pattern):
+    def __init__(self, t: str, regexp: str | Pattern[str]):
         self._type = t
         if type(regexp) is str:
             self._pattern = re.compile(regexp, re.I)
@@ -18,8 +18,8 @@ class RegexpExtMatcher:
     def get_type(self):
         return self._type
 
-    def test(self, file: Path):
-        return self._pattern.fullmatch(file.suffix)
+    def test(self, file: Path) -> bool:
+        return bool(self._pattern.fullmatch(file.suffix))  # type: ignore
 
 
 class ContentMatch:
@@ -32,21 +32,23 @@ class ContentMatch:
     def one_of(self, *options: str):
         return self.type in options
 
-    def is_greater(self, min: float, type: str = None):
+    def is_greater(self, min: float, type: str | None = None):
         if self.ratio < min:
             return False
         return type is None or self.type == type
 
 
 class ContentMatcherResult(List[ContentMatch]):
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any):
         return list.__new__(cls)
 
-    def __init__(self, seq=()):
+    def __init__(self, seq: Iterable[ContentMatch] = ()):
         super().__init__(seq)
 
     def get_type(self, type: str):
-        return next((x for x in self if x.type == type), ContentMatch(type, 0, 0, set()))
+        return next(
+            (x for x in self if x.type == type), ContentMatch(type, 0, 0, set())
+        )
 
 
 no_match = "Unknown"
@@ -61,7 +63,7 @@ class ContentMatcher:
     def _classify_file(self, file: Path):
         return next(
             (matcher.get_type() for matcher in self._matchers if matcher.test(file)),
-            "Unknown"
+            "Unknown",
         )
 
     def match(self, torrent: Torrent) -> ContentMatcherResult:
@@ -74,10 +76,7 @@ class ContentMatcher:
             size = file.stat().st_size
             if file_type not in content_matches:
                 content_matches[file_type] = ContentMatch(
-                    type=file_type,
-                    ratio=0,
-                    total=0,
-                    exts=set()
+                    type=file_type, ratio=0, total=0, exts=set()
                 )
 
             existing = content_matches[file_type]
@@ -86,12 +85,11 @@ class ContentMatcher:
                 existing.exts.add(file.suffix.lower())
             total_size += size
 
-        for k, match in content_matches.items():
+        for _, match in content_matches.items():
             match.ratio = match.total / total_size
 
         ratio_list = sorted(
-            list(content_matches.values())
-            , key=lambda x: x.ratio, reverse=True
+            list(content_matches.values()), key=lambda x: x.ratio, reverse=True
         )
 
         return ContentMatcherResult(ratio_list)

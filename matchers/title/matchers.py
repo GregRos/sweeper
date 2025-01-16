@@ -15,8 +15,8 @@ class RegexpMatcher:
         self._chance = chance
         self.meta_name = meta_name
 
-    def apply(self, other: Torrent) -> int | None:
-        result = self._chance if self._pattern.search(other.name) else 0
+    def apply(self, other: Torrent) -> float | None:
+        result: float = self._chance if self._pattern.search(other.name) else 0
         return result
 
 
@@ -29,7 +29,7 @@ class TitleMatch:
     def one_of(self, *types: str):
         return self.type in types
 
-    def is_greater(self, min: float, type: str = None):
+    def is_greater(self, min: float, type: str | None = None):
         if self.chance < min:
             return False
         return type is None or self.type == type
@@ -40,8 +40,8 @@ class TitleMatcher:
         self._matchers = matchers
 
     def match(self, torrent: Torrent) -> List[TitleMatch]:
-        all_events = defaultdict(list)
-        all_matched_by_type = defaultdict(set)
+        all_events = defaultdict[str, list[float]](list)
+        all_matched_by_type = defaultdict[str, set[str]](set[str])
         for m in self._matchers:
             result = m.apply(torrent)
             if result:
@@ -51,22 +51,22 @@ class TitleMatcher:
         # The following calculation is wrong because it assumes detections are independent
         # events, but they're really not. Also the calculation in step 2 is just misguided.
         all_positive_events = {
-            key: 1 - prod([
-                1 - x for x in all
-            ]) for key, all in all_events.items()
+            key: 1 - prod([1 - x for x in all]) for key, all in all_events.items()
         }
 
         # This is based on real math but isn't right.
-        chance_none = prod([1 - P for k, P in all_positive_events.items()])
+        chance_none = prod([1 - P for _, P in all_positive_events.items()])
         final_chance_by_group = [
-            TitleMatch(t, chance_none / (1 - P), list(all_matched_by_type[t])) for t, P in
-            all_positive_events.items()
+            TitleMatch(t, chance_none / (1 - P), list(all_matched_by_type[t]))
+            for t, P in all_positive_events.items()
         ]
         unknown_chance = TitleMatch("Unknown", chance_none, [])
 
         if len(final_chance_by_group) > 0:
             # We return a match list in descending order
-            chances_by_max = sorted(final_chance_by_group, key=lambda x: x.chance, reverse=True)
+            chances_by_max = sorted(
+                final_chance_by_group, key=lambda x: x.chance, reverse=True
+            )
 
             # This is a heuristic correction to bad math that seems to work in practice:
             chance_some = 1 - chance_none

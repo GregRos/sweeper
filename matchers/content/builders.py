@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import List, Pattern
 
 from .matchers import RegexpExtMatcher, ContentMatcher
@@ -10,15 +9,17 @@ class ContentMatchBuilder:
     _type: str
     _matchers: List[RegexpExtMatcher]
 
-    def __init__(self, type):
+    def __init__(self, type: str):
         self._type = type
         self._matchers = []
 
     def add_exts(self, *exts: str):
-        self._matchers.append(RegexpExtMatcher(self._type, "|".join((f".{x}" for x in exts))))
+        self._matchers.append(
+            RegexpExtMatcher(self._type, "|".join((f".{x}" for x in exts)))
+        )
         return self
 
-    def add_pattern(self, pattern: str | Pattern):
+    def add_pattern(self, pattern: str | Pattern[str]):
         self._matchers.append(RegexpExtMatcher(self._type, pattern))
         return self
 

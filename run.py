@@ -16,7 +16,7 @@ from util import LibraryRoots
 logger = getLogger("sweeper")
 
 
-def run(args: SweepArgs | InfoArgs):
+def run(args: SweepArgs | InfoArgs | SubsArgs):
     if type(args) is InfoArgs:
         run_info(args.torrent)
     elif type(args) is SubsArgs:
@@ -31,20 +31,14 @@ def run(args: SweepArgs | InfoArgs):
         )
 
         extractor = Extractor(
-            working_dir=get_path_env("SWEEPER_WORKING_DIR", is_dir=True, can_create=True)
+            working_dir=get_path_env(
+                "SWEEPER_WORKING_DIR", is_dir=True, can_create=True
+            )
         )
 
         library = LibraryRoots(
             get_path_env("SWEEPER_LIBRARY", is_dir=True, can_create=True),
-            [
-                "movies",
-                "audio",
-                "shows",
-                "programs",
-                "games",
-                "ebooks",
-                "anime"
-            ]
+            ["movies", "audio", "shows", "programs", "games", "ebooks", "anime"],
         )
         Sweeper(
             action=args.action,
@@ -60,18 +54,13 @@ def run(args: SweepArgs | InfoArgs):
             conflict=args.conflict,
             force_filebot_type=args.force_filebot_subtype,
             no_subs=args.no_subs,
-            force_title=args.force_title
+            force_title=args.force_title,
         ).run_sweep()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logger.info(f"INVOKED {print_cmd(sys.argv)}")
     try:
         run(parse_args())
     except Exception as err:
-        logger.fatal(
-            f"EXCEPTION {' '.join(err.args)}",
-            exc_info=err
-        )
-
-
+        logger.fatal(f"EXCEPTION {' '.join(err.args)}", exc_info=err)
