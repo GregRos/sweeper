@@ -3,7 +3,7 @@ from __future__ import annotations
 from logging import getLogger
 from os import getenv, access, X_OK
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, NoReturn, Optional
 
 logger = getLogger("sweeper")
 
@@ -43,18 +43,25 @@ def file_exists(what: Path, following_action: str | None):
         )
 
 
-def raise_bad_input(message: str):
+def raise_bad_input(message: str) -> NoReturn:
     raise SweeperError("BAD_INPUT", message)
 
 
-def get_input_dir(var_name: str, var_value: str, can_create: bool = False):
-    def raise_err(text: str):
+def get_input_dir(
+    var_name: str, var_value: str | list[str] | None, can_create: bool = False
+):
+    def raise_err(text: str) -> NoReturn:
         raise_bad_input(f"Path input '{var_name}'='{var_value}' is bad, because {text}")
 
-    if not var_value:
-        raise_err("it's missing.")
+    match var_value:
+        case str(x):
+            final_value = x
+        case list(xs):
+            final_value = " ".join(xs)
+        case _:
+            raise_err("it's missing.")
 
-    p = Path(var_value)
+    p = Path(final_value)
     if not p.exists():
         if can_create:
             p.mkdir()
